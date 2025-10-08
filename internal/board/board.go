@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 type piece interface {
@@ -242,4 +244,42 @@ func (b *Board) RenderString() string {
 	gameState += fmt.Sprintf("  %-2s %-2s %-2s %-2s %-2s %-2s %-2s %-2s\n", "a", "b", "c", "d", "e", "f", "g", "h")
 
 	return gameState
+}
+
+type BoardModel struct {
+	Board       *Board
+	selected    *Position
+	turn        string
+	inputBuffer string
+	commands    []string
+}
+
+func (m BoardModel) View() string {
+	s := m.Board.RenderString()
+	s += "\n" + m.inputBuffer
+	return s
+}
+
+func (m BoardModel) Init() tea.Cmd {
+	return nil
+}
+
+func (m BoardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.Type {
+		case tea.KeyCtrlC:
+			return m, tea.Quit
+		case tea.KeyRunes:
+			m.inputBuffer += string(msg.Runes)
+		case tea.KeyBackspace:
+			if len(m.inputBuffer) > 0 {
+				m.inputBuffer = m.inputBuffer[:len(m.inputBuffer)-1]
+			}
+		case tea.KeyEnter:
+			m.commands = strings.Fields(m.inputBuffer)
+			m.inputBuffer = ""
+		}
+	}
+	return m, nil
 }

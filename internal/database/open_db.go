@@ -10,7 +10,6 @@ func OpenDb() (*sql.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open db: %w", err)
 	}
-	defer db.Close()
 
 	_, err = db.Exec("PRAGMA foreign_keys = ON;")
 	if err != nil {
