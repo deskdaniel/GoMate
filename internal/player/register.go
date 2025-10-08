@@ -258,6 +258,11 @@ func (m registerModel) View() string {
 	if m.success {
 		s := fmt.Sprintf("Registration for %s Successful!\n\n", m.ctx.Username)
 		s += "You can now log in with your new account.\n"
+
+		m.ctx.Username = ""
+		m.ctx.Password = ""
+
+		s += "\nPress any key to exit.\n"
 		return s
 	}
 

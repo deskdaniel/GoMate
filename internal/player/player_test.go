@@ -64,12 +64,12 @@ func TestHashAndCheckPassword(t *testing.T) {
 		t.Fatalf("HashPassword error: %v", err)
 	}
 
-	err = CheckHash(password, hashed)
+	err = CheckPassword(password, hashed)
 	if err != nil {
 		t.Errorf("CheckHash failed for correct password: %v", err)
 	}
 
-	err = CheckHash("WrongPass!", hashed)
+	err = CheckPassword("WrongPass!", hashed)
 	if err == nil {
 		t.Error("CheckHash did not fail for incorrect password")
 	}
@@ -124,5 +124,62 @@ func TestRegisterUser(t *testing.T) {
 	err = RegisterPlayer(ctx)
 	if err == nil {
 		t.Fatal("RegisterPlayer did not fail for duplicate username")
+	}
+}
+
+func TestLoginUser(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	queries := database.New(db)
+	ctx := &app.Context{
+		Queries:  queries,
+		Username: "LoginUser",
+		Password: "LoginPass123!",
+	}
+
+	err := RegisterPlayer(ctx)
+	if err != nil {
+		t.Fatalf("RegisterPlayer failed: %v", err)
+	}
+
+	ctx.Password = "WrongPass!"
+	err = LoginPlayer(ctx, 1)
+	if err == nil {
+		t.Fatal("LoginPlayer did not fail for incorrect password")
+	}
+
+	ctx.Password = "LoginPass123!"
+	err = LoginPlayer(ctx, 1)
+	if err != nil {
+		t.Fatalf("LoginPlayer failed: %v", err)
+	}
+
+	if ctx.User1 == nil || ctx.User1.Username != "LoginUser" {
+		t.Errorf("Expected User1 to be set with username 'LoginUser', got %+v", ctx.User1)
+	}
+
+	err = LoginPlayer(ctx, 2)
+	if err == nil {
+		t.Fatalf("LoginPlayer did not fail for already logged in username")
+	}
+
+	ctx2 := &app.Context{
+		Queries:  queries,
+		Username: "LoginUser2",
+		Password: "LoginPass123!",
+	}
+	err = RegisterPlayer(ctx2)
+	if err != nil {
+		t.Fatalf("RegisterPlayer for second user failed: %v", err)
+	}
+
+	err = LoginPlayer(ctx2, 2)
+	if err != nil {
+		t.Fatalf("LoginPlayer for second user failed: %v", err)
+	}
+
+	if ctx2.User2 == nil || ctx2.User2.Username != "LoginUser2" {
+		t.Errorf("Expected User2 to be set with username 'LoginUser2', got %+v", ctx2.User2)
 	}
 }
