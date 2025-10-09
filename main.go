@@ -28,7 +28,7 @@ func main() {
 	}
 
 	// gameboard := board.InitializeBoard()
-	m := player.SetupLogin(context, 1)
+	m := player.SetupStats(context)
 
 	p := tea.NewProgram(m)
 	if _, err := p.Run(); err != nil {

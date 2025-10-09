@@ -204,8 +204,8 @@ func (m loginModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case error:
 		m.err = msg
 		return m, nil
-
 	}
+
 	for i := range m.inputs {
 		var cmd tea.Cmd
 		m.inputs[i], cmd = m.inputs[i].Update(msg)
