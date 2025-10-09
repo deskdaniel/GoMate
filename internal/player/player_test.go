@@ -183,3 +183,91 @@ func TestLoginUser(t *testing.T) {
 		t.Errorf("Expected User2 to be set with username 'LoginUser2', got %+v", ctx2.User2)
 	}
 }
+
+func TestUpdateUserRecord(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	queries := database.New(db)
+	ctx := &app.Context{
+		Queries:  queries,
+		Username: "RecordUser",
+		Password: "RecordPass123!",
+	}
+
+	err := RegisterPlayer(ctx)
+	if err != nil {
+		t.Fatalf("RegisterPlayer failed: %v", err)
+	}
+
+	user, err := queries.GetUserByName(context.Background(), "RecordUser")
+	if err != nil {
+		t.Fatalf("GetUserByName failed: %v", err)
+	}
+
+	err = UpdateUserRecord(user.Username, ctx, true, false, false)
+	if err != nil {
+		t.Fatalf("UpdateUserRecord failed: %v", err)
+	}
+
+	stats, err := CheckStats(user.Username, ctx)
+	if err != nil {
+		t.Fatalf("CheckStats failed: %v", err)
+	}
+
+	if stats.Wins != 1 || stats.Losses != 0 || stats.Draws != 0 {
+		t.Errorf("Unexpected stats after win: %+v", stats)
+	}
+
+	err = UpdateUserRecord(user.Username, ctx, false, true, false)
+	if err != nil {
+		t.Fatalf("UpdateUserRecord failed: %v", err)
+	}
+
+	stats, err = CheckStats(user.Username, ctx)
+	if err != nil {
+		t.Fatalf("CheckStats failed: %v", err)
+	}
+
+	if stats.Wins != 1 || stats.Losses != 1 || stats.Draws != 0 {
+		t.Errorf("Unexpected stats after loss: %+v", stats)
+	}
+
+	err = UpdateUserRecord(user.Username, ctx, false, false, true)
+	if err != nil {
+		t.Fatalf("UpdateUserRecord failed: %v", err)
+	}
+
+	stats, err = CheckStats(user.Username, ctx)
+	if err != nil {
+		t.Fatalf("CheckStats failed: %v", err)
+	}
+
+	if stats.Wins != 1 || stats.Losses != 1 || stats.Draws != 1 {
+		t.Errorf("Unexpected stats after draw: %+v", stats)
+	}
+
+	err = UpdateUserRecord(user.Username, ctx, true, true, false)
+	if err == nil {
+		t.Fatal("UpdateUserRecord did not fail for multiple outcomes")
+	}
+
+	err = UpdateUserRecord("NonExistentUser", ctx, true, false, false)
+	if err == nil {
+		t.Fatal("UpdateUserRecord did not fail for non-existent user")
+	}
+
+	err = UpdateUserRecord(user.Username, ctx, true, false, false)
+	if err != nil {
+		t.Fatalf("UpdateUserRecord failed: %v", err)
+	}
+
+	stats, err = CheckStats(user.Username, ctx)
+	if err != nil {
+		t.Fatalf("CheckStats failed: %v", err)
+	}
+
+	if stats.Wins != 2 || stats.Losses != 1 || stats.Draws != 1 {
+		t.Errorf("Unexpected stats after win: %+v", stats)
+	}
+}

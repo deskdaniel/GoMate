@@ -4,11 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/dragoo23/Go-chess/internal/app"
+	"github.com/dragoo23/Go-chess/internal/database"
+	"github.com/google/uuid"
 )
 
 type Stats struct {
@@ -16,6 +19,88 @@ type Stats struct {
 	Wins     int
 	Losses   int
 	Draws    int
+}
+
+func UpdateUserRecord(username string, ctx *app.Context, win, loss, draw bool) error {
+	if ctx == nil || ctx.Queries == nil {
+		return fmt.Errorf("context or Queries is nil")
+	}
+
+	trueCount := 0
+	if win {
+		trueCount++
+	}
+	if loss {
+		trueCount++
+	}
+	if draw {
+		trueCount++
+	}
+	if trueCount != 1 {
+		return fmt.Errorf("exactly one of win, loss, or draw must be true")
+	}
+
+	user, err := ctx.Queries.GetUserByName(context.Background(), username)
+	if err != nil {
+		return fmt.Errorf("failed to get user: %w", err)
+	}
+
+	stats, err := ctx.Queries.GetRecordsByUserID(context.Background(), user.ID)
+	if err != nil && err != sql.ErrNoRows {
+		return fmt.Errorf("failed to get stats: %w", err)
+	} else if err == sql.ErrNoRows {
+		id, err := uuid.NewUUID()
+		if err != nil {
+			return fmt.Errorf("failed to generate record ID: %w", err)
+		}
+
+		statsParams := database.RegisterRecordParams{
+			ID:        id.String(),
+			UserID:    user.ID,
+			CreatedAt: sql.NullString{String: time.Now().Format(time.RFC3339), Valid: true},
+			UpdatedAt: sql.NullString{String: time.Now().Format(time.RFC3339), Valid: true},
+			Wins:      sql.NullInt64{Int64: 0, Valid: true},
+			Losses:    sql.NullInt64{Int64: 0, Valid: true},
+			Draws:     sql.NullInt64{Int64: 0, Valid: true},
+		}
+
+		if win {
+			statsParams.Wins.Int64 = 1
+		} else if loss {
+			statsParams.Losses.Int64 = 1
+		} else if draw {
+			statsParams.Draws.Int64 = 1
+		}
+
+		_, err = ctx.Queries.RegisterRecord(context.Background(), statsParams)
+		if err != nil {
+			return fmt.Errorf("failed to create stats record: %w", err)
+		}
+		return nil
+	}
+
+	if win {
+		stats.Wins.Int64++
+	} else if loss {
+		stats.Losses.Int64++
+	} else if draw {
+		stats.Draws.Int64++
+	}
+	stats.UpdatedAt = sql.NullString{String: time.Now().Format(time.RFC3339), Valid: true}
+
+	updateParams := database.UpdateRecordParams{
+		UpdatedAt: stats.UpdatedAt,
+		Wins:      stats.Wins,
+		Losses:    stats.Losses,
+		Draws:     stats.Draws,
+		UserID:    user.ID,
+	}
+	_, err = ctx.Queries.UpdateRecord(context.Background(), updateParams)
+	if err != nil {
+		return fmt.Errorf("failed to update stats record: %w", err)
+	}
+
+	return nil
 }
 
 func CheckStats(username string, ctx *app.Context) (Stats, error) {
