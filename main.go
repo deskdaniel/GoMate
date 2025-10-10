@@ -8,10 +8,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/dragoo23/Go-chess/internal/app"
 
-	// "github.com/dragoo23/Go-chess/internal/board"
 	"github.com/dragoo23/Go-chess/internal/database"
-	// "github.com/dragoo23/Go-chess/internal/display"
-	"github.com/dragoo23/Go-chess/internal/player"
+	"github.com/dragoo23/Go-chess/internal/navigation"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -28,7 +26,7 @@ func main() {
 	}
 
 	// gameboard := board.InitializeBoard()
-	m := player.SetupStats(context)
+	m := navigation.SetupNavigation(context)
 
 	p := tea.NewProgram(m)
 	if _, err := p.Run(); err != nil {

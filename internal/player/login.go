@@ -8,6 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/dragoo23/Go-chess/internal/app"
+	"github.com/dragoo23/Go-chess/internal/messages"
 )
 
 func checkLogin(ctx *app.Context, slot int) error {
@@ -77,6 +78,29 @@ func LoginPlayer(ctx *app.Context, slot int) error {
 	return nil
 }
 
+func LogoutPlayer(ctx *app.Context, slot int) error {
+	if ctx == nil || ctx.Queries == nil {
+		return fmt.Errorf("context or Queries is nil")
+	}
+
+	switch slot {
+	case 1:
+		if ctx.User1 == nil {
+			return fmt.Errorf("player 1 is not logged in")
+		}
+		ctx.User1 = nil
+	case 2:
+		if ctx.User2 == nil {
+			return fmt.Errorf("player 2 is not logged in")
+		}
+		ctx.User2 = nil
+	default:
+		return fmt.Errorf("invalid slot number")
+	}
+
+	return nil
+}
+
 type loginModel struct {
 	focusIndex field
 	inputs     []textinput.Model
@@ -86,7 +110,7 @@ type loginModel struct {
 	slot       int
 }
 
-func (m loginModel) Init() tea.Cmd {
+func (m *loginModel) Init() tea.Cmd {
 	return textinput.Blink
 }
 
@@ -125,7 +149,7 @@ func SetupLogin(ctx *app.Context, slot int) tea.Model {
 	m.inputs[passwordField].PromptStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
 	m.inputs[passwordField].TextStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
 
-	return m
+	return &m
 }
 
 type loginMsg struct {
@@ -133,7 +157,7 @@ type loginMsg struct {
 	Password string
 }
 
-func (m loginModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *loginModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
@@ -200,7 +224,9 @@ func (m loginModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		m.success = true
-		return m, tea.Quit
+		return m, func() tea.Msg {
+			return messages.SwitchToMainMenu{}
+		}
 	case error:
 		m.err = msg
 		return m, nil
@@ -214,7 +240,7 @@ func (m loginModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m loginModel) View() string {
+func (m *loginModel) View() string {
 	if m.success {
 		s := fmt.Sprintf("User %s logged in successfully!\n\n", m.ctx.Username)
 

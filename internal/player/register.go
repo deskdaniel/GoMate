@@ -12,6 +12,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/dragoo23/Go-chess/internal/app"
 	"github.com/dragoo23/Go-chess/internal/database"
+	"github.com/dragoo23/Go-chess/internal/messages"
 	"github.com/google/uuid"
 )
 
@@ -117,7 +118,7 @@ type registerModel struct {
 	success    bool
 }
 
-func SetupRegister(ctx *app.Context) registerModel {
+func SetupRegister(ctx *app.Context) tea.Model {
 	if ctx == nil || ctx.Queries == nil {
 		panic("SetupRegister called with nil ctx or nil ctx.Queries")
 	}
@@ -162,10 +163,10 @@ func SetupRegister(ctx *app.Context) registerModel {
 	m.inputs[confirmPasswordField].PromptStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
 	m.inputs[confirmPasswordField].TextStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
 
-	return m
+	return &m
 }
 
-func (m registerModel) Init() tea.Cmd {
+func (m *registerModel) Init() tea.Cmd {
 	return textinput.Blink
 }
 
@@ -175,7 +176,7 @@ type registerMsg struct {
 	ConfirmPassword string
 }
 
-func (m registerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *registerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
@@ -240,7 +241,9 @@ func (m registerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		m.success = true
-		return m, tea.Quit
+		return m, func() tea.Msg {
+			return messages.SwitchToMainMenu{}
+		}
 	case error:
 		m.err = msg
 		return m, nil
@@ -254,7 +257,7 @@ func (m registerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m registerModel) View() string {
+func (m *registerModel) View() string {
 	if m.success {
 		s := fmt.Sprintf("Registration for %s Successful!\n\n", m.ctx.Username)
 		s += "You can now log in with your new account.\n"

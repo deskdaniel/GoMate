@@ -5,7 +5,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/dragoo23/Go-chess/internal/app"
 )
 
 type piece interface {
@@ -48,7 +50,7 @@ func (p *Position) String() (string, error) {
 	return position, nil
 }
 
-func positionFromString(pos string) (*Position, error) {
+func PositionFromString(pos string) (*Position, error) {
 	if len(pos) != 2 {
 		fmt.Printf("Incorrect position string %q. It must contain 2 characters: letter(a-h) and number (1-8).\n", pos)
 		return nil, fmt.Errorf("incorrect position string")
@@ -246,39 +248,75 @@ func (b *Board) RenderString() string {
 	return gameState
 }
 
-type BoardModel struct {
-	Board       *Board
-	selected    *Position
-	turn        string
-	inputBuffer string
-	commands    []string
+type boardModel struct {
+	board *Board
+	// selected  *Position
+	ctx       *app.Context
+	whiteTurn bool
+	input     textinput.Model
+	// commands  []string
 }
 
-func (m BoardModel) View() string {
-	s := m.Board.RenderString()
-	s += "\n" + m.inputBuffer
+func NewBoardModel(ctx *app.Context) tea.Model {
+	board := InitializeBoard()
+	whiteTurn := true
+
+	input := textinput.New()
+	turn := ""
+	color := ""
+	if whiteTurn {
+		turn = ctx.User1.Username
+		color = "white"
+	} else {
+		turn = ctx.User2.Username
+		color = "black"
+	}
+	input.Prompt = fmt.Sprintf("%s's(%s) turn: ", turn, color)
+	input.Placeholder = "Enter command (e.g. A2 A3)"
+	input.Focus()
+	input.CharLimit = 15
+	input.Width = 15
+
+	m := boardModel{
+		board:     board,
+		ctx:       ctx,
+		whiteTurn: whiteTurn,
+		input:     input,
+	}
+
+	return &m
+}
+
+func (m *boardModel) View() string {
+	s := m.board.RenderString()
+	s += m.input.View() + "\n"
 	return s
 }
 
-func (m BoardModel) Init() tea.Cmd {
-	return nil
+func (m *boardModel) Init() tea.Cmd {
+	return textinput.Blink
 }
 
-func (m BoardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+type gameMsg struct {
+	input string
+}
+
+func (m *boardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.Type {
-		case tea.KeyCtrlC:
-			return m, tea.Quit
-		case tea.KeyRunes:
-			m.inputBuffer += string(msg.Runes)
-		case tea.KeyBackspace:
-			if len(m.inputBuffer) > 0 {
-				m.inputBuffer = m.inputBuffer[:len(m.inputBuffer)-1]
+		switch msg.String() {
+		case "enter":
+			input := strings.TrimSpace(m.input.Value())
+			if input == "" {
+				return m, nil
 			}
-		case tea.KeyEnter:
-			m.commands = strings.Fields(m.inputBuffer)
-			m.inputBuffer = ""
+			return m, func() tea.Msg {
+				return gameMsg{
+					input: input,
+				}
+			}
+		case "ctrl+c", "esc":
+			return m, tea.Quit
 		}
 	}
 	return m, nil

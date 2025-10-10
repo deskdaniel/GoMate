@@ -11,6 +11,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/dragoo23/Go-chess/internal/app"
 	"github.com/dragoo23/Go-chess/internal/database"
+	"github.com/dragoo23/Go-chess/internal/messages"
 	"github.com/google/uuid"
 )
 
@@ -182,10 +183,10 @@ func SetupStats(ctx *app.Context) tea.Model {
 		input:      username,
 	}
 
-	return m
+	return &m
 }
 
-func (m statsModel) Init() tea.Cmd {
+func (m *statsModel) Init() tea.Cmd {
 	if m.fields[m.focusIndex] == inputUsernameField {
 		return textinput.Blink
 	}
@@ -196,7 +197,7 @@ type statsMsg struct {
 	Username string
 }
 
-func (m statsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *statsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
@@ -265,7 +266,9 @@ func (m statsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.found = true
 		}
 
-		return m, tea.Quit
+		return m, func() tea.Msg {
+			return messages.SwitchToMainMenu{}
+		}
 	case error:
 		m.err = msg
 		return m, nil
@@ -280,7 +283,7 @@ func (m statsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m statsModel) View() string {
+func (m *statsModel) View() string {
 	s := ""
 	if m.found && m.stats != nil {
 		s = fmt.Sprintf("Stats for %s:\n", m.stats.Username)
@@ -297,20 +300,26 @@ func (m statsModel) View() string {
 	}
 
 	buttonStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+	highlightStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("37")).Bold(true)
+
 	s = "Check Player Stats\n\n"
 	for _, field := range m.fields {
+		var label string
 		switch field {
 		case user1Field:
-			s += fmt.Sprintf("%s\n", m.ctx.User1.Username)
+			label = m.ctx.User1.Username
 		case user2Field:
-			s += fmt.Sprintf("%s\n", m.ctx.User2.Username)
+			label = m.ctx.User2.Username
 		case inputUsernameField:
-			s += fmt.Sprintf("%s\n", m.input.View())
+			label = m.input.View()
 		case quitField:
-			if m.fields[m.focusIndex] == quitField {
-				buttonStyle = buttonStyle.Foreground(lipgloss.Color("37")).Bold(true)
-			}
-			s += buttonStyle.Render("[ Quit ]") + "\n"
+			label = "[ Quit ]"
+		}
+
+		if field == m.fields[m.focusIndex] {
+			s += highlightStyle.Render(label) + "\n"
+		} else {
+			s += buttonStyle.Render(label) + "\n"
 		}
 	}
 
