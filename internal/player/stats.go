@@ -200,11 +200,22 @@ type statsMsg struct {
 func (m *statsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
+	if m.found {
+		switch msg.(type) {
+		case tea.KeyMsg:
+			return m, func() tea.Msg {
+				return messages.SwitchToMainMenu{}
+			}
+		}
+	}
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "esc":
-			return m, tea.Quit
+			return m, func() tea.Msg {
+				return messages.SwitchToMainMenu{}
+			}
 		case "tab", "shift+tab", "up", "down":
 			s := msg.String()
 
@@ -266,9 +277,7 @@ func (m *statsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.found = true
 		}
 
-		return m, func() tea.Msg {
-			return messages.SwitchToMainMenu{}
-		}
+		return m, nil
 	case error:
 		m.err = msg
 		return m, nil
@@ -286,10 +295,9 @@ func (m *statsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m *statsModel) View() string {
 	s := ""
 	if m.found && m.stats != nil {
-		s = fmt.Sprintf("Stats for %s:\n", m.stats.Username)
+		s = fmt.Sprintf("Stats for %s:\n\n", m.stats.Username)
 		if m.stats.Wins == 0 && m.stats.Losses == 0 && m.stats.Draws == 0 {
-			s += "No games played yet.\nPress any key to exit.\n"
-			return s
+			s += "No games played yet.\n\n"
 		} else {
 			s += fmt.Sprintf("Wins: %d\n", m.stats.Wins)
 			s += fmt.Sprintf("Losses: %d\n", m.stats.Losses)

@@ -119,6 +119,32 @@ func SetupLogin(ctx *app.Context, slot int) tea.Model {
 		panic("SetupLogin called with nil ctx or nil ctx.Queries")
 	}
 
+	m := loginModel{}
+
+	switch slot {
+	case 1:
+		if ctx.User1 != nil {
+			err := LogoutPlayer(ctx, slot)
+			if err != nil {
+				fmt.Println("Warning: failed to logout existing player 1:", err)
+				return nil
+			}
+			return nil
+		}
+	case 2:
+		if ctx.User2 != nil {
+			err := LogoutPlayer(ctx, slot)
+			if err != nil {
+				fmt.Println("Warning: failed to logout existing player 2:", err)
+				return nil
+			}
+			return nil
+		}
+	default:
+		fmt.Println("SetupLogin called with invalid slot number")
+		return nil
+	}
+
 	username := textinput.New()
 	username.Prompt = "Username: "
 	username.Placeholder = "username"
@@ -134,7 +160,7 @@ func SetupLogin(ctx *app.Context, slot int) tea.Model {
 	password.CharLimit = 50
 	password.Width = 30
 
-	m := loginModel{
+	m = loginModel{
 		inputs: []textinput.Model{
 			username,
 			password,
@@ -160,11 +186,22 @@ type loginMsg struct {
 func (m *loginModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
+	if m.success {
+		switch msg.(type) {
+		case tea.KeyMsg:
+			return m, func() tea.Msg {
+				return messages.SwitchToMainMenu{}
+			}
+		}
+	}
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "esc":
-			return m, tea.Quit
+			return m, func() tea.Msg {
+				return messages.SwitchToMainMenu{}
+			}
 		case "tab", "shift+tab", "enter", "up", "down":
 			s := msg.String()
 
@@ -224,9 +261,7 @@ func (m *loginModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		m.success = true
-		return m, func() tea.Msg {
-			return messages.SwitchToMainMenu{}
-		}
+		return m, nil
 	case error:
 		m.err = msg
 		return m, nil

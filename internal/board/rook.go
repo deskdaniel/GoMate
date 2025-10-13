@@ -9,16 +9,16 @@ type Rook struct {
 	color string
 }
 
-func (p *Rook) Color() (string, error) {
-	if strings.ToLower(p.color) != "white" && strings.ToLower(p.color) != "black" {
+func (r *Rook) Color() (string, error) {
+	if strings.ToLower(r.color) != "white" && strings.ToLower(r.color) != "black" {
 		return "", fmt.Errorf("malformed rook struct, incorrect color field")
 	}
 
-	return strings.ToLower(p.color), nil
+	return strings.ToLower(r.color), nil
 }
 
-func (p *Rook) Symbol() (rune, error) {
-	color, err := p.Color()
+func (r *Rook) Symbol() (rune, error) {
+	color, err := r.Color()
 	if err != nil {
 		return 0, err
 	}
@@ -33,16 +33,6 @@ func (p *Rook) Symbol() (rune, error) {
 	}
 }
 
-// func NewRook(color string) (Rook, error) {
-// 	colorLowercase := strings.ToLower(color)
-
-// 	if colorLowercase != "white" && colorLowercase != "black" {
-// 		return Rook{}, fmt.Errorf("incorrect pawn color")
-// 	}
-
-// 	rook := Rook{
-// 		color: colorLowercase,
-// 	}
-
-// 	return rook, nil
-// }
+func (r *Rook) Move(from, to *Position, board *Board) error {
+	return nil
+}

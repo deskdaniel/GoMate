@@ -8,11 +8,13 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/dragoo23/Go-chess/internal/app"
+	"github.com/dragoo23/Go-chess/internal/messages"
 )
 
 type piece interface {
 	Color() (string, error)
 	Symbol() (rune, error)
+	Move(from, to *Position, board *Board) error
 }
 
 type Position struct {
@@ -22,7 +24,8 @@ type Position struct {
 }
 
 type Board struct {
-	spots [8][8]*Position
+	spots           [8][8]*Position
+	enPassantTarget *Position
 }
 
 func (p *Position) IsValid() error {
@@ -76,20 +79,6 @@ func PositionFromString(pos string) (*Position, error) {
 
 	return &position, nil
 }
-
-// func (b *Board) PlacePiece(piece piece, pos Position) error {
-// 	err := pos.IsValid()
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	if piece == nil {
-// 		return fmt.Errorf("cannot place nil piece")
-// 	}
-
-// 	b.spots[pos.Rank][pos.File].Piece = piece
-// 	return nil
-// }
 
 func InitializeBoard() *Board {
 	b := Board{}
@@ -156,13 +145,15 @@ func InitializeBoard() *Board {
 
 	for j := range b.spots[6] {
 		b.spots[6][j].Piece = &Pawn{
-			color: "black",
+			color:     "black",
+			direction: -1,
 		}
 	}
 
 	for j := range b.spots[1] {
 		b.spots[1][j].Piece = &Pawn{
-			color: "white",
+			color:     "white",
+			direction: 1,
 		}
 	}
 
@@ -176,50 +167,25 @@ func InitializeBoard() *Board {
 // 		fmt.Printf("%d ", rankNumber)
 // 		for file := 0; file < 8; file++ {
 // 			square := b.spots[rank][file]
-// 			var str string
 // 			if square.Piece != nil {
 // 				symbol, err := square.Piece.Symbol()
 // 				if err == nil {
-// 					str = string(symbol)
+// 					fmt.Print(string(symbol))
+// 					if symbol == '♙' {
+// 						fmt.Print(" ")
+// 					}
+// 					fmt.Print(" ")
 // 				} else {
-// 					str = "?"
+// 					fmt.Print("?")
 // 				}
 // 			} else {
-// 				str = "□"
+// 				fmt.Printf("%-2s", "□")
 // 			}
-// 			fmt.Printf("%-2s", str)
 // 		}
 // 		fmt.Println()
 // 	}
 // 	fmt.Printf("  %-2s %-2s %-2s %-2s %-2s %-2s %-2s %-2s\n", "a", "b", "c", "d", "e", "f", "g", "h")
 // }
-
-func (b *Board) Render() {
-	fmt.Printf("  %-2s %-2s %-2s %-2s %-2s %-2s %-2s %-2s\n", "a", "b", "c", "d", "e", "f", "g", "h")
-	for rank := 7; rank >= 0; rank-- {
-		rankNumber := rank + 1
-		fmt.Printf("%d ", rankNumber)
-		for file := 0; file < 8; file++ {
-			square := b.spots[rank][file]
-			if square.Piece != nil {
-				symbol, err := square.Piece.Symbol()
-				if err == nil {
-					fmt.Print(string(symbol))
-					if symbol == '♙' {
-						fmt.Print(" ")
-					}
-					fmt.Print(" ")
-				} else {
-					fmt.Print("?")
-				}
-			} else {
-				fmt.Printf("%-2s", "□")
-			}
-		}
-		fmt.Println()
-	}
-	fmt.Printf("  %-2s %-2s %-2s %-2s %-2s %-2s %-2s %-2s\n", "a", "b", "c", "d", "e", "f", "g", "h")
-}
 
 func (b *Board) RenderString() string {
 	gameState := ""
@@ -262,20 +228,18 @@ func NewBoardModel(ctx *app.Context) tea.Model {
 	whiteTurn := true
 
 	input := textinput.New()
-	turn := ""
-	color := ""
-	if whiteTurn {
-		turn = ctx.User1.Username
-		color = "white"
+
+	name := ""
+	if ctx.User1 != nil {
+		name = ctx.User1.Username
 	} else {
-		turn = ctx.User2.Username
-		color = "black"
+		name = "Player 1"
 	}
-	input.Prompt = fmt.Sprintf("%s's(%s) turn: ", turn, color)
+	input.Prompt = fmt.Sprintf("%s's(white) turn: ", name)
 	input.Placeholder = "Enter command (e.g. A2 A3)"
 	input.Focus()
 	input.CharLimit = 15
-	input.Width = 15
+	input.Width = 30
 
 	m := boardModel{
 		board:     board,
@@ -301,7 +265,11 @@ type gameMsg struct {
 	input string
 }
 
+// On turn check if en passant target is the same color as the player whose turn it is. If yes, clear en passant target.
 func (m *boardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+	m.input, cmd = m.input.Update(msg)
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -316,8 +284,85 @@ func (m *boardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 		case "ctrl+c", "esc":
-			return m, tea.Quit
+			return m, func() tea.Msg {
+				return messages.SwitchToMainMenu{}
+			}
+		}
+	case gameMsg:
+		parts := strings.Fields(msg.input)
+		if len(parts) != 2 {
+			m.input.SetValue("")
+			return m, nil
+		}
+
+		fromStr := parts[0]
+		toStr := parts[1]
+
+		fromPos, err := PositionFromString(fromStr)
+		if err != nil {
+			m.input.SetValue("")
+			return m, nil
+		}
+
+		toPos, err := PositionFromString(toStr)
+		if err != nil {
+			m.input.SetValue("")
+			return m, nil
+		}
+
+		fromSquare := m.board.spots[fromPos.Rank][fromPos.File]
+		toSquare := m.board.spots[toPos.Rank][toPos.File]
+
+		if fromSquare.Piece == nil {
+			m.input.SetValue("")
+			return m, nil
+		}
+
+		pieceColor, err := fromSquare.Piece.Color()
+		if err != nil {
+			m.input.SetValue("")
+			return m, nil
+		}
+
+		if (m.whiteTurn && pieceColor != "white") || (!m.whiteTurn && pieceColor != "black") {
+			m.input.SetValue("")
+			return m, nil
+		}
+
+		err = fromSquare.Piece.Move(fromSquare, toSquare, m.board)
+		if err != nil {
+			m.input.SetValue("")
+			return m, nil
+		}
+
+		if m.whiteTurn {
+			m.whiteTurn = false
+		} else {
+			m.whiteTurn = true
+		}
+
+		m.input.SetValue("")
+		name := ""
+		switch {
+		case m.whiteTurn:
+			if m.ctx.User1 != nil {
+				name = m.ctx.User1.Username
+			} else {
+				name = "Player 1"
+			}
+			color := "white"
+			m.input.Prompt = fmt.Sprintf("%s's(%s) turn: ", name, color)
+			m.input.Placeholder = "Enter command (e.g. A2 A3)"
+		case !m.whiteTurn:
+			if m.ctx.User2 != nil {
+				name = m.ctx.User2.Username
+			} else {
+				name = "Player 2"
+			}
+			color := "black"
+			m.input.Prompt = fmt.Sprintf("%s's(%s) turn: ", name, color)
+			m.input.Placeholder = "Enter command (e.g. A2 A3)"
 		}
 	}
-	return m, nil
+	return m, cmd
 }

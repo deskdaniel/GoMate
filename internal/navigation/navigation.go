@@ -35,7 +35,10 @@ func (m navigationModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.currentModel = game.SetupMainMenu(m.ctx)
 		return m, nil
 	case messages.SwitchToLoginPlayer:
-		m.currentModel = player.SetupLogin(m.ctx, msg.Slot)
+		newModel := player.SetupLogin(m.ctx, msg.Slot)
+		if newModel != nil {
+			m.currentModel = newModel
+		}
 		return m, nil
 	case messages.SwitchToRegisterUser:
 		m.currentModel = player.SetupRegister(m.ctx)

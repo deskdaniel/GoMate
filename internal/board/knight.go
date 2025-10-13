@@ -9,16 +9,16 @@ type Knight struct {
 	color string
 }
 
-func (p *Knight) Color() (string, error) {
-	if strings.ToLower(p.color) != "white" && strings.ToLower(p.color) != "black" {
+func (k *Knight) Color() (string, error) {
+	if strings.ToLower(k.color) != "white" && strings.ToLower(k.color) != "black" {
 		return "", fmt.Errorf("malformed knight struct, incorrect color field")
 	}
 
-	return strings.ToLower(p.color), nil
+	return strings.ToLower(k.color), nil
 }
 
-func (p *Knight) Symbol() (rune, error) {
-	color, err := p.Color()
+func (k *Knight) Symbol() (rune, error) {
+	color, err := k.Color()
 	if err != nil {
 		return 0, err
 	}
@@ -31,4 +31,8 @@ func (p *Knight) Symbol() (rune, error) {
 	default:
 		return 0, fmt.Errorf("unexpected piece color: %s", color)
 	}
+}
+
+func (k *Knight) Move(from, to *Position, board *Board) error {
+	return nil
 }

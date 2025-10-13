@@ -9,16 +9,16 @@ type Bishop struct {
 	color string
 }
 
-func (p *Bishop) Color() (string, error) {
-	if strings.ToLower(p.color) != "white" && strings.ToLower(p.color) != "black" {
+func (b *Bishop) Color() (string, error) {
+	if strings.ToLower(b.color) != "white" && strings.ToLower(b.color) != "black" {
 		return "", fmt.Errorf("malformed bishop struct, incorrect color field")
 	}
 
-	return strings.ToLower(p.color), nil
+	return strings.ToLower(b.color), nil
 }
 
-func (p *Bishop) Symbol() (rune, error) {
-	color, err := p.Color()
+func (b *Bishop) Symbol() (rune, error) {
+	color, err := b.Color()
 	if err != nil {
 		return 0, err
 	}
@@ -31,4 +31,8 @@ func (p *Bishop) Symbol() (rune, error) {
 	default:
 		return 0, fmt.Errorf("unexpected piece color: %s", color)
 	}
+}
+
+func (b *Bishop) Move(from, to *Position, board *Board) error {
+	return nil
 }
