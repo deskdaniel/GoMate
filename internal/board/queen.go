@@ -33,6 +33,26 @@ func (q *Queen) Symbol() (rune, error) {
 	}
 }
 
+func (q *Queen) ValidMove(from, to *Position, board *Board) bool {
+	rankDiff := to.Rank - from.Rank
+	fileDiff := to.File - from.File
+
+	if rankDiff != 0 && fileDiff != 0 {
+		if abs(rankDiff) != abs(fileDiff) {
+			return false
+		}
+	}
+
+	return isPathClear(from, to, board)
+}
+
 func (q *Queen) Move(from, to *Position, board *Board) error {
+	if !q.ValidMove(from, to, board) {
+		return fmt.Errorf("invalid move for queen")
+	}
+
+	to.Piece = q
+	from.Piece = nil
+
 	return nil
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/dragoo23/Go-chess/internal/app"
 	"github.com/dragoo23/Go-chess/internal/messages"
 )
@@ -53,9 +54,9 @@ func (p *Position) String() (string, error) {
 	return position, nil
 }
 
-func PositionFromString(pos string) (*Position, error) {
+func PositionFromString(pos string, m *boardModel) (*Position, error) {
 	if len(pos) != 2 {
-		fmt.Printf("Incorrect position string %q. It must contain 2 characters: letter(a-h) and number (1-8).\n", pos)
+		m.err = fmt.Sprintf("Incorrect position string %q. It must contain 2 characters: letter(a-h) and number (1-8).\n", pos)
 		return nil, fmt.Errorf("incorrect position string")
 	}
 
@@ -73,7 +74,7 @@ func PositionFromString(pos string) (*Position, error) {
 
 	err := position.IsValid()
 	if err != nil {
-		fmt.Printf("Incorrect position string %q. It must contain 2 characters: letter(a-h) and number (1-8).\n", pos)
+		m.err = fmt.Sprintf("Incorrect position string %q. It must contain 2 characters: letter(a-h) and number (1-8).\n", pos)
 		return nil, fmt.Errorf("incorrect position string")
 	}
 
@@ -204,19 +205,24 @@ func (b *Board) RenderString() string {
 					gameState += fmt.Sprintf("%-3s", "?")
 				}
 			} else {
-				gameState += fmt.Sprintf("%-3s", "□")
+				if (rank+file)%2 != 1 {
+					gameState += fmt.Sprintf("%-3s", "■")
+				} else {
+					gameState += fmt.Sprintf("%-3s", "□")
+				}
+
 			}
 		}
 		gameState += fmt.Sprintln()
 	}
-	gameState += fmt.Sprintf("  %-2s %-2s %-2s %-2s %-2s %-2s %-2s %-2s\n", "a", "b", "c", "d", "e", "f", "g", "h")
+	gameState += fmt.Sprintf("  %-2s %-2s %-2s %-2s %-2s %-2s %-2s %-2s\n\n", "a", "b", "c", "d", "e", "f", "g", "h")
 
 	return gameState
 }
 
 type boardModel struct {
-	board *Board
-	// selected  *Position
+	board     *Board
+	err       string
 	ctx       *app.Context
 	whiteTurn bool
 	input     textinput.Model
@@ -253,6 +259,9 @@ func NewBoardModel(ctx *app.Context) tea.Model {
 
 func (m *boardModel) View() string {
 	s := m.board.RenderString()
+	if m.err != "" {
+		s += lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Render(m.err) + "\n"
+	}
 	s += m.input.View() + "\n"
 	return s
 }
@@ -298,13 +307,13 @@ func (m *boardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		fromStr := parts[0]
 		toStr := parts[1]
 
-		fromPos, err := PositionFromString(fromStr)
+		fromPos, err := PositionFromString(fromStr, m)
 		if err != nil {
 			m.input.SetValue("")
 			return m, nil
 		}
 
-		toPos, err := PositionFromString(toStr)
+		toPos, err := PositionFromString(toStr, m)
 		if err != nil {
 			m.input.SetValue("")
 			return m, nil
@@ -332,6 +341,8 @@ func (m *boardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		err = fromSquare.Piece.Move(fromSquare, toSquare, m.board)
 		if err != nil {
 			m.input.SetValue("")
+			errString := err.Error()
+			m.err = strings.ToUpper(errString[:1]) + errString[1:]
 			return m, nil
 		}
 
@@ -363,6 +374,7 @@ func (m *boardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.input.Prompt = fmt.Sprintf("%s's(%s) turn: ", name, color)
 			m.input.Placeholder = "Enter command (e.g. A2 A3)"
 		}
+		m.err = ""
 	}
 	return m, cmd
 }
