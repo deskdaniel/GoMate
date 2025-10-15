@@ -33,6 +33,42 @@ func (k *Knight) Symbol() (rune, error) {
 	}
 }
 
+func (k *Knight) ValidMove(from, to *Position, board *Board) bool {
+	rankDiff := to.Rank - from.Rank
+	fileDiff := to.File - from.File
+
+	if !((rankDiff == 2 && fileDiff == 1) || (rankDiff == 1 && fileDiff == 2)) {
+		return false
+	}
+
+	if to.Piece != nil {
+		targetColor, err := to.Piece.Color()
+		if err != nil || targetColor == k.color {
+			return false
+		}
+	}
+
+	return true
+}
+
 func (k *Knight) Move(from, to *Position, board *Board) error {
-	return nil
+	if !k.ValidMove(from, to, board) {
+		return fmt.Errorf("invalid move for knight")
+	}
+
+	backupPiece := to.Piece
+	to.Piece = k
+	from.Piece = nil
+
+	var kingPos *Position
+	switch k.color {
+	case "white":
+		kingPos = board.whiteKingPosition
+	case "black":
+		kingPos = board.blackKingPosition
+	default:
+		return fmt.Errorf("malformed knight struct, incorrect color field")
+	}
+
+	return exposeKing(k.color, board, from, to, kingPos, k, backupPiece)
 }

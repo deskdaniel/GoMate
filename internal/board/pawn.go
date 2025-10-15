@@ -76,13 +76,14 @@ func (p *Pawn) ValidMove(from, to *Position, board *Board) bool {
 	return false
 }
 
+// reverting move that would expose king in case of en passant captures en passant target anyway
 func (p *Pawn) Move(from, to *Position, board *Board) error {
 	valid := p.ValidMove(from, to, board)
 	if !valid {
 		return fmt.Errorf("invalid move for pawn")
 	}
 
-	if abs(to.File-from.File) == 1 && board.spots[to.Rank][to.File].Piece == nil {
+	if abs(to.File-from.File) == 1 && to.Piece == nil {
 		capturedRank := from.Rank
 		capturedFile := to.File
 		capture := board.spots[capturedRank][capturedFile]
@@ -92,10 +93,26 @@ func (p *Pawn) Move(from, to *Position, board *Board) error {
 		capture.Piece = nil
 	}
 
-	p.hasMoved = true
+	backupPiece := to.Piece
 	to.Piece = p
 	from.Piece = nil
 
+	var kingPos *Position
+	switch p.color {
+	case "white":
+		kingPos = board.whiteKingPosition
+	case "black":
+		kingPos = board.blackKingPosition
+	default:
+		return fmt.Errorf("malformed pawn struct, incorrect color field")
+	}
+
+	err := exposeKing(p.color, board, from, to, kingPos, p, backupPiece)
+	if err != nil {
+		return err
+	}
+
+	p.hasMoved = true
 	if abs(to.Rank-from.Rank) == 2 {
 		board.enPassantTarget = to
 	}

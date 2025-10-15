@@ -53,7 +53,7 @@ func isPathClear(from, to *Position, board *Board) bool {
 
 	for i, j := from.Rank+rankStep, from.File+fileStep; i != to.Rank+rankStep || j != to.File+fileStep; i, j = i+rankStep, j+fileStep {
 		if board.spots[i][j].Piece != nil {
-			if i != to.Rank && j != to.File {
+			if i != to.Rank || j != to.File {
 				return false
 			} else {
 				targetColor, err := to.Piece.Color()
@@ -109,13 +109,48 @@ func (b *Bishop) ValidMove(from, to *Position, board *Board) bool {
 	return isPathClear(from, to, board)
 }
 
+func exposeKing(color string, board *Board, from, to, kingPos *Position, p, backup piece) error {
+	if isUnderAttack(kingPos, color, board) {
+		from.Piece = p
+		to.Piece = backup
+		return fmt.Errorf("this move exposes your king")
+	}
+
+	return nil
+}
+
 func (b *Bishop) Move(from, to *Position, board *Board) error {
 	if !b.ValidMove(from, to, board) {
 		return fmt.Errorf("invalid move for bishop")
 	}
 
+	backupPiece := to.Piece
 	to.Piece = b
 	from.Piece = nil
 
-	return nil
+	// switch b.color {
+	// case "white":
+	// 	if isUnderAttack(board.whiteKingPosition, "white", board) {
+	// 		from.Piece = b
+	// 		to.Piece = backupPiece
+	// 		return fmt.Errorf("this move exposes your king")
+	// 	}
+	// case "black":
+	// 	if isUnderAttack(board.blackKingPosition, "black", board) {
+	// 		from.Piece = b
+	// 		to.Piece = backupPiece
+	// 		return fmt.Errorf("this move exposes your king")
+	// 	}
+	// }
+	var kingPos *Position
+	switch b.color {
+	case "white":
+		kingPos = board.whiteKingPosition
+	case "black":
+		kingPos = board.blackKingPosition
+	default:
+		return fmt.Errorf("malformed bishop struct, incorrect color field")
+	}
+
+	return exposeKing(b.color, board, from, to, kingPos, b, backupPiece)
 }

@@ -51,8 +51,19 @@ func (q *Queen) Move(from, to *Position, board *Board) error {
 		return fmt.Errorf("invalid move for queen")
 	}
 
+	backupPiece := to.Piece
 	to.Piece = q
 	from.Piece = nil
 
-	return nil
+	var kingPos *Position
+	switch q.color {
+	case "white":
+		kingPos = board.whiteKingPosition
+	case "black":
+		kingPos = board.blackKingPosition
+	default:
+		return fmt.Errorf("malformed queen struct, incorrect color field")
+	}
+
+	return exposeKing(q.color, board, from, to, kingPos, q, backupPiece)
 }

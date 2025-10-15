@@ -86,8 +86,25 @@ func (r *Rook) Move(from, to *Position, board *Board) error {
 		return fmt.Errorf("invalid move for rook")
 	}
 
+	backupPiece := to.Piece
 	to.Piece = r
 	from.Piece = nil
+
+	var kingPos *Position
+	switch r.color {
+	case "white":
+		kingPos = board.whiteKingPosition
+	case "black":
+		kingPos = board.blackKingPosition
+	default:
+		return fmt.Errorf("malformed rook struct, incorrect color field")
+	}
+
+	err := exposeKing(r.color, board, from, to, kingPos, r, backupPiece)
+	if err != nil {
+		return err
+	}
+
 	r.hasMoved = true
 
 	return nil

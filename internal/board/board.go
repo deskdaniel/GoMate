@@ -16,6 +16,7 @@ type piece interface {
 	Color() (string, error)
 	Symbol() (rune, error)
 	Move(from, to *Position, board *Board) error
+	ValidMove(from, to *Position, board *Board) bool
 }
 
 type Position struct {
@@ -25,8 +26,10 @@ type Position struct {
 }
 
 type Board struct {
-	spots           [8][8]*Position
-	enPassantTarget *Position
+	spots             [8][8]*Position
+	enPassantTarget   *Position
+	whiteKingPosition *Position
+	blackKingPosition *Position
 }
 
 func (p *Position) IsValid() error {
@@ -109,6 +112,7 @@ func InitializeBoard() *Board {
 	b.spots[0][4].Piece = &King{
 		color: "white",
 	}
+	b.whiteKingPosition = b.spots[0][4]
 	b.spots[0][5].Piece = &Bishop{
 		color: "white",
 	}
@@ -134,6 +138,7 @@ func InitializeBoard() *Board {
 	b.spots[7][4].Piece = &King{
 		color: "black",
 	}
+	b.blackKingPosition = b.spots[7][4]
 	b.spots[7][5].Piece = &Bishop{
 		color: "black",
 	}
@@ -223,10 +228,10 @@ func (b *Board) RenderString() string {
 type boardModel struct {
 	board     *Board
 	err       string
+	check     string
 	ctx       *app.Context
 	whiteTurn bool
 	input     textinput.Model
-	// commands  []string
 }
 
 func NewBoardModel(ctx *app.Context) tea.Model {
@@ -259,8 +264,11 @@ func NewBoardModel(ctx *app.Context) tea.Model {
 
 func (m *boardModel) View() string {
 	s := m.board.RenderString()
+	if m.check != "" {
+		s += lipgloss.NewStyle().Foreground(lipgloss.Color("208")).Bold(true).Render(m.check) + "\n"
+	}
 	if m.err != "" {
-		s += lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Render(m.err) + "\n"
+		s += lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Bold(true).Render(m.err) + "\n"
 	}
 	s += m.input.View() + "\n"
 	return s
@@ -274,7 +282,9 @@ type gameMsg struct {
 	input string
 }
 
-// On turn check if en passant target is the same color as the player whose turn it is. If yes, clear en passant target.
+// Each piece should check if it's move didn't expose own king to check (not here but in each piece's move method)
+// Need checkmate logic
+// Reverting move for pawn needs fixing - when performing en passant that would expose own king, the pawn stays in the same square, but enemy pawn (en passant target) is captured anyway
 func (m *boardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	m.input, cmd = m.input.Update(msg)
@@ -298,6 +308,19 @@ func (m *boardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	case gameMsg:
+		if m.board.enPassantTarget != nil {
+			targetColor, err := m.board.enPassantTarget.Piece.Color()
+			if m.whiteTurn {
+				if err != nil || targetColor == "white" {
+					m.board.enPassantTarget = nil
+				}
+			} else {
+				if err != nil || targetColor == "black" {
+					m.board.enPassantTarget = nil
+				}
+			}
+		}
+
 		parts := strings.Fields(msg.input)
 		if len(parts) != 2 {
 			m.input.SetValue("")
@@ -348,8 +371,18 @@ func (m *boardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		if m.whiteTurn {
 			m.whiteTurn = false
+			if isUnderAttack(m.board.blackKingPosition, "black", m.board) {
+				m.check = "Black king is under check!"
+			} else {
+				m.check = ""
+			}
 		} else {
 			m.whiteTurn = true
+			if isUnderAttack(m.board.whiteKingPosition, "white", m.board) {
+				m.check = "White king is under check!"
+			} else {
+				m.check = ""
+			}
 		}
 
 		m.input.SetValue("")
