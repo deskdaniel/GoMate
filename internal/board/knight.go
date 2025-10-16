@@ -34,8 +34,12 @@ func (k *Knight) Symbol() (rune, error) {
 }
 
 func (k *Knight) ValidMove(from, to *Position, board *Board) bool {
-	rankDiff := to.Rank - from.Rank
-	fileDiff := to.File - from.File
+	if from == to {
+		return false
+	}
+
+	rankDiff := abs(to.Rank - from.Rank)
+	fileDiff := abs(to.File - from.File)
 
 	if !((rankDiff == 2 && fileDiff == 1) || (rankDiff == 1 && fileDiff == 2)) {
 		return false

@@ -166,33 +166,6 @@ func InitializeBoard() *Board {
 	return &b
 }
 
-// func (b *Board) Render() {
-// 	fmt.Printf("  %-2s %-2s %-2s %-2s %-2s %-2s %-2s %-2s\n", "a", "b", "c", "d", "e", "f", "g", "h")
-// 	for rank := 7; rank >= 0; rank-- {
-// 		rankNumber := rank + 1
-// 		fmt.Printf("%d ", rankNumber)
-// 		for file := 0; file < 8; file++ {
-// 			square := b.spots[rank][file]
-// 			if square.Piece != nil {
-// 				symbol, err := square.Piece.Symbol()
-// 				if err == nil {
-// 					fmt.Print(string(symbol))
-// 					if symbol == '♙' {
-// 						fmt.Print(" ")
-// 					}
-// 					fmt.Print(" ")
-// 				} else {
-// 					fmt.Print("?")
-// 				}
-// 			} else {
-// 				fmt.Printf("%-2s", "□")
-// 			}
-// 		}
-// 		fmt.Println()
-// 	}
-// 	fmt.Printf("  %-2s %-2s %-2s %-2s %-2s %-2s %-2s %-2s\n", "a", "b", "c", "d", "e", "f", "g", "h")
-// }
-
 func (b *Board) RenderString() string {
 	gameState := ""
 
@@ -226,12 +199,15 @@ func (b *Board) RenderString() string {
 }
 
 type boardModel struct {
-	board     *Board
-	err       string
-	check     string
-	ctx       *app.Context
-	whiteTurn bool
-	input     textinput.Model
+	board           *Board
+	err             string
+	check           string
+	ctx             *app.Context
+	whiteTurn       bool
+	input           textinput.Model
+	promotionSquare *Position
+	promotionColor  string
+	promotionFocus  int
 }
 
 func NewBoardModel(ctx *app.Context) tea.Model {
@@ -264,6 +240,18 @@ func NewBoardModel(ctx *app.Context) tea.Model {
 
 func (m *boardModel) View() string {
 	s := m.board.RenderString()
+	if m.promotionSquare != nil {
+		s += "Pawn promotion! Select a piece to promote to:\n"
+		pieces := []string{"Queen", "Rook", "Bishop", "Knight"}
+		for i, piece := range pieces {
+			if i == m.promotionFocus {
+				s += lipgloss.NewStyle().Foreground(lipgloss.Color("37")).Bold(true).Render("> "+piece) + "\n"
+			} else {
+				s += "  " + piece + "\n"
+			}
+		}
+		return s
+	}
 	if m.check != "" {
 		s += lipgloss.NewStyle().Foreground(lipgloss.Color("208")).Bold(true).Render(m.check) + "\n"
 	}
@@ -282,12 +270,71 @@ type gameMsg struct {
 	input string
 }
 
-// Each piece should check if it's move didn't expose own king to check (not here but in each piece's move method)
+type promotionField int
+
+const (
+	queenField promotionField = iota
+	rookField
+	bishopField
+	knightField
+)
+
 // Need checkmate logic
-// Reverting move for pawn needs fixing - when performing en passant that would expose own king, the pawn stays in the same square, but enemy pawn (en passant target) is captured anyway
+// Need stalemate logic
+// Need draw logic (threefold repetition, fifty-move rule, insufficient material)
+// Need pawn promotion logic - needs testing
+// Need resign logic
 func (m *boardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	m.input, cmd = m.input.Update(msg)
+
+	if m.promotionSquare != nil {
+		switch msg := msg.(type) {
+		case tea.KeyMsg:
+			switch msg.String() {
+			case "up":
+				m.promotionFocus--
+				if m.promotionFocus < 0 {
+					m.promotionFocus = 3
+				}
+			case "down":
+				m.promotionFocus++
+				if m.promotionFocus > 3 {
+					m.promotionFocus = 0
+				}
+			case "enter":
+				var newPiece piece
+				switch promotionField(m.promotionFocus) {
+				case queenField:
+					newPiece = &Queen{
+						color: m.promotionColor,
+					}
+				case rookField:
+					newPiece = &Rook{
+						color: m.promotionColor,
+					}
+				case bishopField:
+					newPiece = &Bishop{
+						color: m.promotionColor,
+					}
+				case knightField:
+					newPiece = &Knight{
+						color: m.promotionColor,
+					}
+				}
+
+				m.promotionSquare.Piece = newPiece
+				m.promotionSquare = nil
+				m.promotionColor = ""
+				m.promotionFocus = 0
+
+				switchTurn(m)
+				resetInputField(m)
+
+				return m, nil
+			}
+		}
+	}
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -308,18 +355,7 @@ func (m *boardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	case gameMsg:
-		if m.board.enPassantTarget != nil {
-			targetColor, err := m.board.enPassantTarget.Piece.Color()
-			if m.whiteTurn {
-				if err != nil || targetColor == "white" {
-					m.board.enPassantTarget = nil
-				}
-			} else {
-				if err != nil || targetColor == "black" {
-					m.board.enPassantTarget = nil
-				}
-			}
-		}
+		clearEnPassant(m)
 
 		parts := strings.Fields(msg.input)
 		if len(parts) != 2 {
@@ -369,45 +405,83 @@ func (m *boardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		if m.whiteTurn {
-			m.whiteTurn = false
-			if isUnderAttack(m.board.blackKingPosition, "black", m.board) {
-				m.check = "Black king is under check!"
-			} else {
-				m.check = ""
+		switch m.whiteTurn {
+		case true:
+			if toSquare.Rank == 7 && toSquare.Piece.(*Pawn) != nil {
+				m.promotionSquare = toSquare
+				m.promotionColor = "white"
+				return m, nil
 			}
-		} else {
-			m.whiteTurn = true
-			if isUnderAttack(m.board.whiteKingPosition, "white", m.board) {
-				m.check = "White king is under check!"
-			} else {
-				m.check = ""
+		case false:
+			if toSquare.Rank == 0 && toSquare.Piece.(*Pawn) != nil {
+				m.promotionSquare = toSquare
+				m.promotionColor = "black"
+				return m, nil
 			}
 		}
 
-		m.input.SetValue("")
-		name := ""
-		switch {
-		case m.whiteTurn:
-			if m.ctx.User1 != nil {
-				name = m.ctx.User1.Username
-			} else {
-				name = "Player 1"
-			}
-			color := "white"
-			m.input.Prompt = fmt.Sprintf("%s's(%s) turn: ", name, color)
-			m.input.Placeholder = "Enter command (e.g. A2 A3)"
-		case !m.whiteTurn:
-			if m.ctx.User2 != nil {
-				name = m.ctx.User2.Username
-			} else {
-				name = "Player 2"
-			}
-			color := "black"
-			m.input.Prompt = fmt.Sprintf("%s's(%s) turn: ", name, color)
-			m.input.Placeholder = "Enter command (e.g. A2 A3)"
-		}
-		m.err = ""
+		switchTurn(m)
+
+		resetInputField(m)
 	}
 	return m, cmd
+}
+
+func clearEnPassant(m *boardModel) {
+	if m.board.enPassantTarget != nil {
+		targetColor, err := m.board.enPassantTarget.Piece.Color()
+		if m.whiteTurn {
+			if err != nil || targetColor == "white" {
+				m.board.enPassantTarget = nil
+			}
+		} else {
+			if err != nil || targetColor == "black" {
+				m.board.enPassantTarget = nil
+			}
+		}
+	}
+}
+
+func resetInputField(m *boardModel) {
+	m.input.SetValue("")
+	name := ""
+	switch {
+	case m.whiteTurn:
+		if m.ctx.User1 != nil {
+			name = m.ctx.User1.Username
+		} else {
+			name = "Player 1"
+		}
+		color := "white"
+		m.input.Prompt = fmt.Sprintf("%s's(%s) turn: ", name, color)
+		m.input.Placeholder = "Enter command (e.g. A2 A3)"
+	case !m.whiteTurn:
+		if m.ctx.User2 != nil {
+			name = m.ctx.User2.Username
+		} else {
+			name = "Player 2"
+		}
+		color := "black"
+		m.input.Prompt = fmt.Sprintf("%s's(%s) turn: ", name, color)
+		m.input.Placeholder = "Enter command (e.g. A2 A3)"
+	}
+	m.err = ""
+}
+
+func switchTurn(m *boardModel) {
+	if m.whiteTurn {
+		m.whiteTurn = false
+		if isUnderAttack(m.board.blackKingPosition, "black", m.board) {
+			m.check = "Black king is under check!"
+		} else {
+			m.check = ""
+		}
+	} else {
+		m.whiteTurn = true
+		if isUnderAttack(m.board.whiteKingPosition, "white", m.board) {
+			m.check = "White king is under check!"
+		} else {
+			m.check = ""
+		}
+	}
 }

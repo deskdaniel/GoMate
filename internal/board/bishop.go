@@ -75,36 +75,16 @@ func isPathClear(from, to *Position, board *Board) bool {
 }
 
 func (b *Bishop) ValidMove(from, to *Position, board *Board) bool {
+	if from == to {
+		return false
+	}
+
 	rankDiff := to.Rank - from.Rank
 	fileDiff := to.File - from.File
 
 	if abs(rankDiff) != abs(fileDiff) {
 		return false
 	}
-
-	// rankStep := 1
-	// if rankDiff < 0 {
-	// 	rankStep = -1
-	// }
-	// fileStep := 1
-	// if fileDiff < 0 {
-	// 	fileStep = -1
-	// }
-
-	// for i, j := from.Rank+rankStep, from.File+fileStep; i != to.Rank; i, j = i+rankStep, j+fileStep {
-	// 	if board.spots[i][j].Piece != nil {
-	// 		return false
-	// 	}
-	// }
-
-	// if to.Piece != nil {
-	// 	targetColor, err := to.Piece.Color()
-	// 	if err != nil || targetColor == b.color {
-	// 		return false
-	// 	}
-	// }
-
-	// return true
 
 	return isPathClear(from, to, board)
 }
@@ -128,20 +108,6 @@ func (b *Bishop) Move(from, to *Position, board *Board) error {
 	to.Piece = b
 	from.Piece = nil
 
-	// switch b.color {
-	// case "white":
-	// 	if isUnderAttack(board.whiteKingPosition, "white", board) {
-	// 		from.Piece = b
-	// 		to.Piece = backupPiece
-	// 		return fmt.Errorf("this move exposes your king")
-	// 	}
-	// case "black":
-	// 	if isUnderAttack(board.blackKingPosition, "black", board) {
-	// 		from.Piece = b
-	// 		to.Piece = backupPiece
-	// 		return fmt.Errorf("this move exposes your king")
-	// 	}
-	// }
 	var kingPos *Position
 	switch b.color {
 	case "white":

@@ -34,6 +34,10 @@ func (q *Queen) Symbol() (rune, error) {
 }
 
 func (q *Queen) ValidMove(from, to *Position, board *Board) bool {
+	if from == to {
+		return false
+	}
+
 	rankDiff := to.Rank - from.Rank
 	fileDiff := to.File - from.File
 

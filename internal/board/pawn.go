@@ -43,6 +43,10 @@ func abs(x int) int {
 }
 
 func (p *Pawn) ValidMove(from, to *Position, board *Board) bool {
+	if from == to {
+		return false
+	}
+
 	fileDiff := to.File - from.File
 	rankDiff := to.Rank - from.Rank
 
@@ -83,14 +87,17 @@ func (p *Pawn) Move(from, to *Position, board *Board) error {
 		return fmt.Errorf("invalid move for pawn")
 	}
 
+	var capturedPiece piece
+	var capturedPos *Position
 	if abs(to.File-from.File) == 1 && to.Piece == nil {
 		capturedRank := from.Rank
 		capturedFile := to.File
-		capture := board.spots[capturedRank][capturedFile]
-		if capture.Piece == nil {
+		capturedPos = board.spots[capturedRank][capturedFile]
+		capturedPiece = capturedPos.Piece
+		if capturedPiece == nil {
 			return fmt.Errorf("no piece to capture en passant")
 		}
-		capture.Piece = nil
+		capturedPos.Piece = nil
 	}
 
 	backupPiece := to.Piece
@@ -109,6 +116,9 @@ func (p *Pawn) Move(from, to *Position, board *Board) error {
 
 	err := exposeKing(p.color, board, from, to, kingPos, p, backupPiece)
 	if err != nil {
+		if capturedPiece != nil {
+			capturedPos.Piece = capturedPiece
+		}
 		return err
 	}
 
