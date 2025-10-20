@@ -71,6 +71,12 @@ func (r *Rook) Move(from, to *Position, board *Board) error {
 	err := exposeKing(r.color, board, from, to, kingPos, r, backupPiece)
 	if err != nil {
 		return err
+	} else {
+		if backupPiece != nil {
+			board.staleTurns = 0
+		} else {
+			board.staleTurns++
+		}
 	}
 
 	r.hasMoved = true

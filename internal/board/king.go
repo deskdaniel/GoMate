@@ -208,5 +208,11 @@ func (k *King) Move(from, to *Position, board *Board) error {
 		return fmt.Errorf("malformed king struct, incorrect color field")
 	}
 
+	if backupPiece != nil {
+		board.staleTurns = 0
+	} else {
+		board.staleTurns++
+	}
+
 	return nil
 }

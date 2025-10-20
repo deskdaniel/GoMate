@@ -74,5 +74,16 @@ func (k *Knight) Move(from, to *Position, board *Board) error {
 		return fmt.Errorf("malformed knight struct, incorrect color field")
 	}
 
-	return exposeKing(k.color, board, from, to, kingPos, k, backupPiece)
+	err := exposeKing(k.color, board, from, to, kingPos, k, backupPiece)
+	if err != nil {
+		return err
+	} else {
+		if backupPiece != nil {
+			board.staleTurns = 0
+		} else {
+			board.staleTurns++
+		}
+	}
+
+	return nil
 }

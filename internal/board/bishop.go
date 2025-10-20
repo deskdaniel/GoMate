@@ -118,5 +118,16 @@ func (b *Bishop) Move(from, to *Position, board *Board) error {
 		return fmt.Errorf("malformed bishop struct, incorrect color field")
 	}
 
-	return exposeKing(b.color, board, from, to, kingPos, b, backupPiece)
+	err := exposeKing(b.color, board, from, to, kingPos, b, backupPiece)
+	if err != nil {
+		return err
+	} else {
+		if backupPiece != nil {
+			board.staleTurns = 0
+		} else {
+			board.staleTurns++
+		}
+	}
+
+	return nil
 }

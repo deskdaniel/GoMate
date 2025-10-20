@@ -126,6 +126,7 @@ func (p *Pawn) Move(from, to *Position, board *Board) error {
 	if abs(to.Rank-from.Rank) == 2 {
 		board.enPassantTarget = to
 	}
+	board.staleTurns = 0
 
 	return nil
 }
