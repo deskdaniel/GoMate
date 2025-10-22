@@ -276,9 +276,13 @@ func (m *boardModel) View() string {
 	if m.err != "" {
 		s += lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Bold(true).Render(m.err) + "\n"
 	}
-	if m.board.staleTurns > 60 {
+	_, warn := check50MoveFule(m.board.staleTurns)
+	if warn {
 		s += lipgloss.NewStyle().Foreground(lipgloss.Color("11")).Bold(true).Render(fmt.Sprintf("Warning: %d half-moves without pawn movement or capture. Game will be drawn automatically if it reaches 100.", m.board.staleTurns)) + "\n"
 	}
+	// if m.board.staleTurns > 60 {
+	// 	s += lipgloss.NewStyle().Foreground(lipgloss.Color("11")).Bold(true).Render(fmt.Sprintf("Warning: %d half-moves without pawn movement or capture. Game will be drawn automatically if it reaches 100.", m.board.staleTurns)) + "\n"
+	// }
 	s += m.input.View() + "\n"
 	return s
 }
@@ -593,7 +597,8 @@ func (m *boardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
-		if m.board.staleTurns >= 100 {
+		draw, _ := check50MoveFule(m.board.staleTurns)
+		if draw {
 			message := "Draw due to fifty-move rule! Game over."
 			return m, func() tea.Msg {
 				return overMsg{
@@ -922,4 +927,15 @@ func haveSufficientMaterial(board *Board) bool {
 		return color1 != color2
 	}
 	return true
+}
+
+func check50MoveFule(staleTurns int) (draw bool, warning bool) {
+	switch {
+	case staleTurns >= 100:
+		return true, false
+	case staleTurns >= 60:
+		return false, true
+	default:
+		return false, false
+	}
 }
