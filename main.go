@@ -21,12 +21,11 @@ func main() {
 	}
 	defer db.Close()
 	queries := database.New(db)
-	context := &app.Context{
+	ctx := &app.Context{
 		Queries: queries,
 	}
 
-	// gameboard := board.InitializeBoard()
-	m := navigation.SetupNavigation(context)
+	m := navigation.SetupNavigation(ctx)
 
 	p := tea.NewProgram(m)
 	if _, err := p.Run(); err != nil {

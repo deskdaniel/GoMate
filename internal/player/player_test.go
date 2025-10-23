@@ -59,17 +59,17 @@ func TestCheckUserName(t *testing.T) {
 
 func TestHashAndCheckPassword(t *testing.T) {
 	password := "SecurePass123!"
-	hashed, err := HashPassword(password)
+	hashed, err := hashPassword(password)
 	if err != nil {
 		t.Fatalf("HashPassword error: %v", err)
 	}
 
-	err = CheckPassword(password, hashed)
+	err = checkPasswordHash(password, hashed)
 	if err != nil {
 		t.Errorf("CheckHash failed for correct password: %v", err)
 	}
 
-	err = CheckPassword("WrongPass!", hashed)
+	err = checkPasswordHash("WrongPass!", hashed)
 	if err == nil {
 		t.Error("CheckHash did not fail for incorrect password")
 	}
@@ -103,7 +103,7 @@ func TestRegisterUser(t *testing.T) {
 		Password: "TestPass123!",
 	}
 
-	err := RegisterPlayer(ctx)
+	err := registerPlayer(ctx)
 	if err != nil {
 		t.Fatalf("RegisterPlayer failed: %v", err)
 	}
@@ -121,7 +121,7 @@ func TestRegisterUser(t *testing.T) {
 		t.Error("Expected non-empty hashed password")
 	}
 
-	err = RegisterPlayer(ctx)
+	err = registerPlayer(ctx)
 	if err == nil {
 		t.Fatal("RegisterPlayer did not fail for duplicate username")
 	}
@@ -138,19 +138,19 @@ func TestLoginUser(t *testing.T) {
 		Password: "LoginPass123!",
 	}
 
-	err := RegisterPlayer(ctx)
+	err := registerPlayer(ctx)
 	if err != nil {
 		t.Fatalf("RegisterPlayer failed: %v", err)
 	}
 
 	ctx.Password = "WrongPass!"
-	err = LoginPlayer(ctx, 1)
+	err = loginPlayer(ctx, 1)
 	if err == nil {
 		t.Fatal("LoginPlayer did not fail for incorrect password")
 	}
 
 	ctx.Password = "LoginPass123!"
-	err = LoginPlayer(ctx, 1)
+	err = loginPlayer(ctx, 1)
 	if err != nil {
 		t.Fatalf("LoginPlayer failed: %v", err)
 	}
@@ -159,7 +159,7 @@ func TestLoginUser(t *testing.T) {
 		t.Errorf("Expected User1 to be set with username 'LoginUser', got %+v", ctx.User1)
 	}
 
-	err = LoginPlayer(ctx, 2)
+	err = loginPlayer(ctx, 2)
 	if err == nil {
 		t.Fatalf("LoginPlayer did not fail for already logged in username")
 	}
@@ -169,12 +169,12 @@ func TestLoginUser(t *testing.T) {
 		Username: "LoginUser2",
 		Password: "LoginPass123!",
 	}
-	err = RegisterPlayer(ctx2)
+	err = registerPlayer(ctx2)
 	if err != nil {
 		t.Fatalf("RegisterPlayer for second user failed: %v", err)
 	}
 
-	err = LoginPlayer(ctx2, 2)
+	err = loginPlayer(ctx2, 2)
 	if err != nil {
 		t.Fatalf("LoginPlayer for second user failed: %v", err)
 	}
@@ -195,7 +195,7 @@ func TestUpdateUserRecord(t *testing.T) {
 		Password: "RecordPass123!",
 	}
 
-	err := RegisterPlayer(ctx)
+	err := registerPlayer(ctx)
 	if err != nil {
 		t.Fatalf("RegisterPlayer failed: %v", err)
 	}
@@ -205,12 +205,12 @@ func TestUpdateUserRecord(t *testing.T) {
 		t.Fatalf("GetUserByName failed: %v", err)
 	}
 
-	err = UpdateUserRecord(user.Username, ctx, true, false, false)
+	err = updateUserRecord(user.Username, ctx, true, false, false)
 	if err != nil {
 		t.Fatalf("UpdateUserRecord failed: %v", err)
 	}
 
-	stats, err := CheckStats(user.Username, ctx)
+	stats, err := checkStats(user.Username, ctx)
 	if err != nil {
 		t.Fatalf("CheckStats failed: %v", err)
 	}
@@ -219,12 +219,12 @@ func TestUpdateUserRecord(t *testing.T) {
 		t.Errorf("Unexpected stats after win: %+v", stats)
 	}
 
-	err = UpdateUserRecord(user.Username, ctx, false, true, false)
+	err = updateUserRecord(user.Username, ctx, false, true, false)
 	if err != nil {
 		t.Fatalf("UpdateUserRecord failed: %v", err)
 	}
 
-	stats, err = CheckStats(user.Username, ctx)
+	stats, err = checkStats(user.Username, ctx)
 	if err != nil {
 		t.Fatalf("CheckStats failed: %v", err)
 	}
@@ -233,12 +233,12 @@ func TestUpdateUserRecord(t *testing.T) {
 		t.Errorf("Unexpected stats after loss: %+v", stats)
 	}
 
-	err = UpdateUserRecord(user.Username, ctx, false, false, true)
+	err = updateUserRecord(user.Username, ctx, false, false, true)
 	if err != nil {
 		t.Fatalf("UpdateUserRecord failed: %v", err)
 	}
 
-	stats, err = CheckStats(user.Username, ctx)
+	stats, err = checkStats(user.Username, ctx)
 	if err != nil {
 		t.Fatalf("CheckStats failed: %v", err)
 	}
@@ -247,22 +247,22 @@ func TestUpdateUserRecord(t *testing.T) {
 		t.Errorf("Unexpected stats after draw: %+v", stats)
 	}
 
-	err = UpdateUserRecord(user.Username, ctx, true, true, false)
+	err = updateUserRecord(user.Username, ctx, true, true, false)
 	if err == nil {
 		t.Fatal("UpdateUserRecord did not fail for multiple outcomes")
 	}
 
-	err = UpdateUserRecord("NonExistentUser", ctx, true, false, false)
+	err = updateUserRecord("NonExistentUser", ctx, true, false, false)
 	if err == nil {
 		t.Fatal("UpdateUserRecord did not fail for non-existent user")
 	}
 
-	err = UpdateUserRecord(user.Username, ctx, true, false, false)
+	err = updateUserRecord(user.Username, ctx, true, false, false)
 	if err != nil {
 		t.Fatalf("UpdateUserRecord failed: %v", err)
 	}
 
-	stats, err = CheckStats(user.Username, ctx)
+	stats, err = checkStats(user.Username, ctx)
 	if err != nil {
 		t.Fatalf("CheckStats failed: %v", err)
 	}

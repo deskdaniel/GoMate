@@ -5,11 +5,11 @@ import (
 	"strings"
 )
 
-type Knight struct {
+type knight struct {
 	color string
 }
 
-func (k *Knight) Color() (string, error) {
+func (k *knight) colorString() (string, error) {
 	if strings.ToLower(k.color) != "white" && strings.ToLower(k.color) != "black" {
 		return "", fmt.Errorf("malformed knight struct, incorrect color field")
 	}
@@ -17,8 +17,8 @@ func (k *Knight) Color() (string, error) {
 	return strings.ToLower(k.color), nil
 }
 
-func (k *Knight) Symbol() (rune, error) {
-	color, err := k.Color()
+func (k *knight) symbol() (rune, error) {
+	color, err := k.colorString()
 	if err != nil {
 		return 0, err
 	}
@@ -33,20 +33,20 @@ func (k *Knight) Symbol() (rune, error) {
 	}
 }
 
-func (k *Knight) ValidMove(from, to *Position, board *Board) bool {
+func (k *knight) validMove(from, to *position, board *board) bool {
 	if from == to {
 		return false
 	}
 
-	rankDiff := abs(to.Rank - from.Rank)
-	fileDiff := abs(to.File - from.File)
+	rankDiff := abs(to.rank - from.rank)
+	fileDiff := abs(to.file - from.file)
 
 	if !((rankDiff == 2 && fileDiff == 1) || (rankDiff == 1 && fileDiff == 2)) {
 		return false
 	}
 
-	if to.Piece != nil {
-		targetColor, err := to.Piece.Color()
+	if to.piece != nil {
+		targetColor, err := to.piece.colorString()
 		if err != nil || targetColor == k.color {
 			return false
 		}
@@ -55,16 +55,16 @@ func (k *Knight) ValidMove(from, to *Position, board *Board) bool {
 	return true
 }
 
-func (k *Knight) Move(from, to *Position, board *Board) error {
-	if !k.ValidMove(from, to, board) {
+func (k *knight) move(from, to *position, board *board) error {
+	if !k.validMove(from, to, board) {
 		return fmt.Errorf("invalid move for knight")
 	}
 
-	backupPiece := to.Piece
-	to.Piece = k
-	from.Piece = nil
+	backupPiece := to.piece
+	to.piece = k
+	from.piece = nil
 
-	var kingPos *Position
+	var kingPos *position
 	switch k.color {
 	case "white":
 		kingPos = board.whiteKingPosition

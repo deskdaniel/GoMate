@@ -38,7 +38,7 @@ func checkLogin(ctx *app.Context, slot int) error {
 	return nil
 }
 
-func LoginPlayer(ctx *app.Context, slot int) error {
+func loginPlayer(ctx *app.Context, slot int) error {
 	if ctx == nil || ctx.Queries == nil {
 		return fmt.Errorf("context or Queries is nil")
 	}
@@ -53,7 +53,7 @@ func LoginPlayer(ctx *app.Context, slot int) error {
 		return fmt.Errorf("failed to get user: %w", err)
 	}
 
-	err = CheckPassword(ctx.Password, user.HashedPassword)
+	err = checkPasswordHash(ctx.Password, user.HashedPassword)
 	if err != nil {
 		return fmt.Errorf("invalid password")
 	}
@@ -78,7 +78,7 @@ func LoginPlayer(ctx *app.Context, slot int) error {
 	return nil
 }
 
-func LogoutPlayer(ctx *app.Context, slot int) error {
+func logoutPlayer(ctx *app.Context, slot int) error {
 	if ctx == nil || ctx.Queries == nil {
 		return fmt.Errorf("context or Queries is nil")
 	}
@@ -124,7 +124,7 @@ func SetupLogin(ctx *app.Context, slot int) tea.Model {
 	switch slot {
 	case 1:
 		if ctx.User1 != nil {
-			err := LogoutPlayer(ctx, slot)
+			err := logoutPlayer(ctx, slot)
 			if err != nil {
 				fmt.Println("Warning: failed to logout existing player 1:", err)
 				return nil
@@ -133,7 +133,7 @@ func SetupLogin(ctx *app.Context, slot int) tea.Model {
 		}
 	case 2:
 		if ctx.User2 != nil {
-			err := LogoutPlayer(ctx, slot)
+			err := logoutPlayer(ctx, slot)
 			if err != nil {
 				fmt.Println("Warning: failed to logout existing player 2:", err)
 				return nil
@@ -254,7 +254,7 @@ func (m *loginModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.ctx.Username = msg.Username
 		m.ctx.Password = msg.Password
 
-		err := LoginPlayer(m.ctx, m.slot)
+		err := loginPlayer(m.ctx, m.slot)
 		if err != nil {
 			m.err = err
 			return m, nil

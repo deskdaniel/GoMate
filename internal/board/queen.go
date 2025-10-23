@@ -5,11 +5,11 @@ import (
 	"strings"
 )
 
-type Queen struct {
+type queen struct {
 	color string
 }
 
-func (q *Queen) Color() (string, error) {
+func (q *queen) colorString() (string, error) {
 	if strings.ToLower(q.color) != "white" && strings.ToLower(q.color) != "black" {
 		return "", fmt.Errorf("malformed queen struct, incorrect color field")
 	}
@@ -17,8 +17,8 @@ func (q *Queen) Color() (string, error) {
 	return strings.ToLower(q.color), nil
 }
 
-func (q *Queen) Symbol() (rune, error) {
-	color, err := q.Color()
+func (q *queen) symbol() (rune, error) {
+	color, err := q.colorString()
 	if err != nil {
 		return 0, err
 	}
@@ -33,13 +33,13 @@ func (q *Queen) Symbol() (rune, error) {
 	}
 }
 
-func (q *Queen) ValidMove(from, to *Position, board *Board) bool {
+func (q *queen) validMove(from, to *position, board *board) bool {
 	if from == to {
 		return false
 	}
 
-	rankDiff := to.Rank - from.Rank
-	fileDiff := to.File - from.File
+	rankDiff := to.rank - from.rank
+	fileDiff := to.file - from.file
 
 	if rankDiff != 0 && fileDiff != 0 {
 		if abs(rankDiff) != abs(fileDiff) {
@@ -50,16 +50,16 @@ func (q *Queen) ValidMove(from, to *Position, board *Board) bool {
 	return isPathClear(from, to, board)
 }
 
-func (q *Queen) Move(from, to *Position, board *Board) error {
-	if !q.ValidMove(from, to, board) {
+func (q *queen) move(from, to *position, board *board) error {
+	if !q.validMove(from, to, board) {
 		return fmt.Errorf("invalid move for queen")
 	}
 
-	backupPiece := to.Piece
-	to.Piece = q
-	from.Piece = nil
+	backupPiece := to.piece
+	to.piece = q
+	from.piece = nil
 
-	var kingPos *Position
+	var kingPos *position
 	switch q.color {
 	case "white":
 		kingPos = board.whiteKingPosition

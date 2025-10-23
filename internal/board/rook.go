@@ -5,12 +5,12 @@ import (
 	"strings"
 )
 
-type Rook struct {
+type rook struct {
 	color    string
 	hasMoved bool
 }
 
-func (r *Rook) Color() (string, error) {
+func (r *rook) colorString() (string, error) {
 	if strings.ToLower(r.color) != "white" && strings.ToLower(r.color) != "black" {
 		return "", fmt.Errorf("malformed rook struct, incorrect color field")
 	}
@@ -18,8 +18,8 @@ func (r *Rook) Color() (string, error) {
 	return strings.ToLower(r.color), nil
 }
 
-func (r *Rook) Symbol() (rune, error) {
-	color, err := r.Color()
+func (r *rook) symbol() (rune, error) {
+	color, err := r.colorString()
 	if err != nil {
 		return 0, err
 	}
@@ -34,13 +34,13 @@ func (r *Rook) Symbol() (rune, error) {
 	}
 }
 
-func (r *Rook) ValidMove(from, to *Position, board *Board) bool {
+func (r *rook) validMove(from, to *position, board *board) bool {
 	if from == to {
 		return false
 	}
 
-	rankDiff := to.Rank - from.Rank
-	fileDiff := to.File - from.File
+	rankDiff := to.rank - from.rank
+	fileDiff := to.file - from.file
 
 	if rankDiff != 0 && fileDiff != 0 {
 		return false
@@ -49,16 +49,16 @@ func (r *Rook) ValidMove(from, to *Position, board *Board) bool {
 	return isPathClear(from, to, board)
 }
 
-func (r *Rook) Move(from, to *Position, board *Board) error {
-	if !r.ValidMove(from, to, board) {
+func (r *rook) move(from, to *position, board *board) error {
+	if !r.validMove(from, to, board) {
 		return fmt.Errorf("invalid move for rook")
 	}
 
-	backupPiece := to.Piece
-	to.Piece = r
-	from.Piece = nil
+	backupPiece := to.piece
+	to.piece = r
+	from.piece = nil
 
-	var kingPos *Position
+	var kingPos *position
 	switch r.color {
 	case "white":
 		kingPos = board.whiteKingPosition

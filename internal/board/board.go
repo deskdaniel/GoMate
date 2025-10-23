@@ -18,52 +18,52 @@ import (
 )
 
 type piece interface {
-	Color() (string, error)
-	Symbol() (rune, error)
-	Move(from, to *Position, board *Board) error
-	ValidMove(from, to *Position, board *Board) bool
+	colorString() (string, error)
+	symbol() (rune, error)
+	move(from, to *position, board *board) error
+	validMove(from, to *position, board *board) bool
 }
 
-type Position struct {
-	Rank  int
-	File  int
-	Piece piece
+type position struct {
+	rank  int
+	file  int
+	piece piece
 }
 
-type Board struct {
-	spots             [8][8]*Position
-	enPassantTarget   *Position
-	whiteKingPosition *Position
-	blackKingPosition *Position
+type board struct {
+	spots             [8][8]*position
+	enPassantTarget   *position
+	whiteKingPosition *position
+	blackKingPosition *position
 	staleTurns        int
 }
 
-func (p *Position) IsValid() error {
-	if p.Rank < 0 || p.Rank > 7 {
+func (p *position) isValid() error {
+	if p.rank < 0 || p.rank > 7 {
 		return fmt.Errorf("invalid position: rank out of valid range")
 	}
 
-	if p.File < 0 || p.File > 7 {
+	if p.file < 0 || p.file > 7 {
 		return fmt.Errorf("invalid position: file out of valid range")
 	}
 
 	return nil
 }
 
-func (p *Position) String() (string, error) {
-	err := p.IsValid()
+func (p *position) string() (string, error) {
+	err := p.isValid()
 	if err != nil {
 		return "", err
 	}
 
-	rank := p.Rank + 1
-	file := rune('a' + p.File)
+	rank := p.rank + 1
+	file := rune('a' + p.file)
 
 	position := string(file) + strconv.Itoa(rank)
 	return position, nil
 }
 
-func PositionFromString(pos string, m *boardModel) (*Position, error) {
+func positionFromString(pos string, m *boardModel) (*position, error) {
 	if len(pos) != 2 {
 		m.err = fmt.Sprintf("Incorrect position string %q. It must contain 2 characters: letter(a-h) and number (1-8).\n", pos)
 		return nil, fmt.Errorf("incorrect position string")
@@ -76,12 +76,12 @@ func PositionFromString(pos string, m *boardModel) (*Position, error) {
 	rankInt := int(rank - '1')
 	fileInt := int(file - 'a')
 
-	position := Position{
-		Rank: rankInt,
-		File: fileInt,
+	position := position{
+		rank: rankInt,
+		file: fileInt,
 	}
 
-	err := position.IsValid()
+	err := position.isValid()
 	if err != nil {
 		m.err = fmt.Sprintf("Incorrect position string %q. It must contain 2 characters: letter(a-h) and number (1-8).\n", pos)
 		return nil, fmt.Errorf("incorrect position string")
@@ -90,80 +90,80 @@ func PositionFromString(pos string, m *boardModel) (*Position, error) {
 	return &position, nil
 }
 
-func InitializeBoard() *Board {
-	b := Board{}
+func initializeBoard() *board {
+	b := board{}
 
 	for i := range b.spots {
 		for j := range b.spots[i] {
-			b.spots[i][j] = &Position{
-				Rank:  i,
-				File:  j,
-				Piece: nil,
+			b.spots[i][j] = &position{
+				rank:  i,
+				file:  j,
+				piece: nil,
 			}
 		}
 	}
 
-	b.spots[0][0].Piece = &Rook{
+	b.spots[0][0].piece = &rook{
 		color: "white",
 	}
-	b.spots[0][1].Piece = &Knight{
+	b.spots[0][1].piece = &knight{
 		color: "white",
 	}
-	b.spots[0][2].Piece = &Bishop{
+	b.spots[0][2].piece = &bishop{
 		color: "white",
 	}
-	b.spots[0][3].Piece = &Queen{
+	b.spots[0][3].piece = &queen{
 		color: "white",
 	}
-	b.spots[0][4].Piece = &King{
+	b.spots[0][4].piece = &king{
 		color: "white",
 	}
 	b.whiteKingPosition = b.spots[0][4]
-	b.spots[0][5].Piece = &Bishop{
+	b.spots[0][5].piece = &bishop{
 		color: "white",
 	}
-	b.spots[0][6].Piece = &Knight{
+	b.spots[0][6].piece = &knight{
 		color: "white",
 	}
-	b.spots[0][7].Piece = &Rook{
+	b.spots[0][7].piece = &rook{
 		color: "white",
 	}
 
-	b.spots[7][0].Piece = &Rook{
+	b.spots[7][0].piece = &rook{
 		color: "black",
 	}
-	b.spots[7][1].Piece = &Knight{
+	b.spots[7][1].piece = &knight{
 		color: "black",
 	}
-	b.spots[7][2].Piece = &Bishop{
+	b.spots[7][2].piece = &bishop{
 		color: "black",
 	}
-	b.spots[7][3].Piece = &Queen{
+	b.spots[7][3].piece = &queen{
 		color: "black",
 	}
-	b.spots[7][4].Piece = &King{
+	b.spots[7][4].piece = &king{
 		color: "black",
 	}
 	b.blackKingPosition = b.spots[7][4]
-	b.spots[7][5].Piece = &Bishop{
+	b.spots[7][5].piece = &bishop{
 		color: "black",
 	}
-	b.spots[7][6].Piece = &Knight{
+	b.spots[7][6].piece = &knight{
 		color: "black",
 	}
-	b.spots[7][7].Piece = &Rook{
+	b.spots[7][7].piece = &rook{
 		color: "black",
 	}
 
 	for j := range b.spots[6] {
-		b.spots[6][j].Piece = &Pawn{
+		b.spots[6][j].piece = &pawn{
 			color:     "black",
 			direction: -1,
 		}
 	}
 
 	for j := range b.spots[1] {
-		b.spots[1][j].Piece = &Pawn{
+		b.spots[1][j].piece = &pawn{
 			color:     "white",
 			direction: 1,
 		}
@@ -172,7 +172,7 @@ func InitializeBoard() *Board {
 	return &b
 }
 
-func (b *Board) RenderString() string {
+func (b *board) renderString() string {
 	gameState := ""
 
 	gameState = fmt.Sprintf("  %-2s %-2s %-2s %-2s %-2s %-2s %-2s %-2s\n", "a", "b", "c", "d", "e", "f", "g", "h")
@@ -181,8 +181,8 @@ func (b *Board) RenderString() string {
 		gameState += fmt.Sprintf("%d ", rankNumber)
 		for file := 0; file < 8; file++ {
 			square := b.spots[rank][file]
-			if square.Piece != nil {
-				symbol, err := square.Piece.Symbol()
+			if square.piece != nil {
+				symbol, err := square.piece.symbol()
 				if err == nil {
 					gameState += fmt.Sprint(string(symbol)) + "  "
 				} else {
@@ -205,7 +205,7 @@ func (b *Board) RenderString() string {
 }
 
 type boardModel struct {
-	board           *Board
+	board           *board
 	err             string
 	drawMsg         string
 	drawTimer       int
@@ -213,7 +213,7 @@ type boardModel struct {
 	ctx             *app.Context
 	whiteTurn       bool
 	input           textinput.Model
-	promotionSquare *Position
+	promotionSquare *position
 	promotionColor  string
 	promotionFocus  int
 	offeredDraw     bool
@@ -222,7 +222,7 @@ type boardModel struct {
 }
 
 func NewBoardModel(ctx *app.Context) tea.Model {
-	board := InitializeBoard()
+	board := initializeBoard()
 	whiteTurn := true
 
 	input := textinput.New()
@@ -250,7 +250,7 @@ func NewBoardModel(ctx *app.Context) tea.Model {
 }
 
 func (m *boardModel) View() string {
-	s := m.board.RenderString()
+	s := m.board.renderString()
 	if m.promotionSquare != nil {
 		s += "Pawn promotion! Select a piece to promote to:\n"
 		pieces := []string{"Queen", "Rook", "Bishop", "Knight"}
@@ -280,9 +280,6 @@ func (m *boardModel) View() string {
 	if warn {
 		s += lipgloss.NewStyle().Foreground(lipgloss.Color("11")).Bold(true).Render(fmt.Sprintf("Warning: %d half-moves without pawn movement or capture. Game will be drawn automatically if it reaches 100.", m.board.staleTurns)) + "\n"
 	}
-	// if m.board.staleTurns > 60 {
-	// 	s += lipgloss.NewStyle().Foreground(lipgloss.Color("11")).Bold(true).Render(fmt.Sprintf("Warning: %d half-moves without pawn movement or capture. Game will be drawn automatically if it reaches 100.", m.board.staleTurns)) + "\n"
-	// }
 	s += m.input.View() + "\n"
 	return s
 }
@@ -342,24 +339,24 @@ func (m *boardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				var newPiece piece
 				switch promotionField(m.promotionFocus) {
 				case queenField:
-					newPiece = &Queen{
+					newPiece = &queen{
 						color: m.promotionColor,
 					}
 				case rookField:
-					newPiece = &Rook{
+					newPiece = &rook{
 						color: m.promotionColor,
 					}
 				case bishopField:
-					newPiece = &Bishop{
+					newPiece = &bishop{
 						color: m.promotionColor,
 					}
 				case knightField:
-					newPiece = &Knight{
+					newPiece = &knight{
 						color: m.promotionColor,
 					}
 				}
 
-				m.promotionSquare.Piece = newPiece
+				m.promotionSquare.piece = newPiece
 				m.promotionSquare = nil
 				m.promotionColor = ""
 				m.promotionFocus = 0
@@ -442,12 +439,10 @@ func (m *boardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if m.offeredDraw {
 					message := "Game ended in a draw by agreement."
 					m.input.Blur()
-					var winner *app.User
-					var loser *app.User
 					return m, func() tea.Msg {
 						return overMsg{
-							winner:  winner,
-							loser:   loser,
+							winner:  nil,
+							loser:   nil,
 							draw:    true,
 							message: message,
 						}
@@ -482,27 +477,27 @@ func (m *boardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		fromStr := parts[0]
 		toStr := parts[1]
 
-		fromPos, err := PositionFromString(fromStr, m)
+		fromPos, err := positionFromString(fromStr, m)
 		if err != nil {
 			m.input.SetValue("")
 			return m, nil
 		}
 
-		toPos, err := PositionFromString(toStr, m)
+		toPos, err := positionFromString(toStr, m)
 		if err != nil {
 			m.input.SetValue("")
 			return m, nil
 		}
 
-		fromSquare := m.board.spots[fromPos.Rank][fromPos.File]
-		toSquare := m.board.spots[toPos.Rank][toPos.File]
+		fromSquare := m.board.spots[fromPos.rank][fromPos.file]
+		toSquare := m.board.spots[toPos.rank][toPos.file]
 
-		if fromSquare.Piece == nil {
+		if fromSquare.piece == nil {
 			m.input.SetValue("")
 			return m, nil
 		}
 
-		pieceColor, err := fromSquare.Piece.Color()
+		pieceColor, err := fromSquare.piece.colorString()
 		if err != nil {
 			m.input.SetValue("")
 			return m, nil
@@ -513,7 +508,7 @@ func (m *boardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		err = fromSquare.Piece.Move(fromSquare, toSquare, m.board)
+		err = fromSquare.piece.move(fromSquare, toSquare, m.board)
 		if err != nil {
 			m.input.SetValue("")
 			errString := err.Error()
@@ -523,16 +518,16 @@ func (m *boardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		switch m.whiteTurn {
 		case true:
-			if toSquare.Rank == 7 {
-				if pawn, ok := toSquare.Piece.(*Pawn); ok && pawn != nil {
+			if toSquare.rank == 7 {
+				if pawn, ok := toSquare.piece.(*pawn); ok && pawn != nil {
 					m.promotionSquare = toSquare
 					m.promotionColor = "white"
 					return m, nil
 				}
 			}
 		case false:
-			if toSquare.Rank == 0 {
-				if pawn, ok := toSquare.Piece.(*Pawn); ok && pawn != nil {
+			if toSquare.rank == 0 {
+				if pawn, ok := toSquare.piece.(*pawn); ok && pawn != nil {
 					m.promotionSquare = toSquare
 					m.promotionColor = "black"
 					return m, nil
@@ -775,7 +770,7 @@ func (m *boardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func clearEnPassant(m *boardModel) {
 	if m.board.enPassantTarget != nil {
-		targetColor, err := m.board.enPassantTarget.Piece.Color()
+		targetColor, err := m.board.enPassantTarget.piece.colorString()
 		if m.whiteTurn {
 			if err != nil || targetColor == "white" {
 				m.board.enPassantTarget = nil
@@ -837,12 +832,12 @@ func switchTurn(m *boardModel) {
 	}
 }
 
-func hasLegalMove(board *Board, color string) bool {
+func hasLegalMove(board *board, color string) bool {
 	for rank := 0; rank < 8; rank++ {
 		for file := 0; file < 8; file++ {
 			square := board.spots[rank][file]
-			if square.Piece != nil {
-				pieceColor, err := square.Piece.Color()
+			if square.piece != nil {
+				pieceColor, err := square.piece.colorString()
 				if err != nil || pieceColor != color {
 					continue
 				}
@@ -850,13 +845,13 @@ func hasLegalMove(board *Board, color string) bool {
 				for toRank := 0; toRank < 8; toRank++ {
 					for toFile := 0; toFile < 8; toFile++ {
 						toSquare := board.spots[toRank][toFile]
-						if square.Piece.ValidMove(square, toSquare, board) {
-							movingPiece := square.Piece
-							capturedPiece := toSquare.Piece
-							toSquare.Piece = movingPiece
-							square.Piece = nil
-							var kingPosition *Position
-							if _, isKing := movingPiece.(*King); isKing {
+						if square.piece.validMove(square, toSquare, board) {
+							movingPiece := square.piece
+							capturedPiece := toSquare.piece
+							toSquare.piece = movingPiece
+							square.piece = nil
+							var kingPosition *position
+							if _, isKing := movingPiece.(*king); isKing {
 								kingPosition = toSquare
 							} else if color == "white" {
 								kingPosition = board.whiteKingPosition
@@ -864,8 +859,8 @@ func hasLegalMove(board *Board, color string) bool {
 								kingPosition = board.blackKingPosition
 							}
 							underAttack := isUnderAttack(kingPosition, color, board)
-							square.Piece = movingPiece
-							toSquare.Piece = capturedPiece
+							square.piece = movingPiece
+							toSquare.piece = capturedPiece
 							if !underAttack {
 								return true
 							}
@@ -894,18 +889,18 @@ func stalemateCheck(m *boardModel) bool {
 	return false
 }
 
-func haveSufficientMaterial(board *Board) bool {
-	var minorPiecePositions []*Position
+func haveSufficientMaterial(board *board) bool {
+	var minorPiecePositions []*position
 	for rank := 0; rank < 8; rank++ {
 		for file := 0; file < 8; file++ {
 			square := board.spots[rank][file]
-			if square.Piece != nil {
-				switch square.Piece.(type) {
-				case *Pawn, *Rook, *Queen:
+			if square.piece != nil {
+				switch square.piece.(type) {
+				case *pawn, *rook, *queen:
 					return true
-				case *Bishop:
+				case *bishop:
 					minorPiecePositions = append(minorPiecePositions, square)
-				case *Knight:
+				case *knight:
 					minorPiecePositions = append(minorPiecePositions, square)
 				}
 			}
@@ -917,13 +912,13 @@ func haveSufficientMaterial(board *Board) bool {
 	if len(minorPiecePositions) <= 1 {
 		return false
 	}
-	piece1 := minorPiecePositions[0].Piece
-	piece2 := minorPiecePositions[1].Piece
-	_, ok1 := piece1.(*Bishop)
-	_, ok2 := piece2.(*Bishop)
+	piece1 := minorPiecePositions[0].piece
+	piece2 := minorPiecePositions[1].piece
+	_, ok1 := piece1.(*bishop)
+	_, ok2 := piece2.(*bishop)
 	if ok1 && ok2 {
-		color1 := (minorPiecePositions[0].Rank + minorPiecePositions[0].File) % 2
-		color2 := (minorPiecePositions[1].Rank + minorPiecePositions[1].File) % 2
+		color1 := (minorPiecePositions[0].rank + minorPiecePositions[0].file) % 2
+		color2 := (minorPiecePositions[1].rank + minorPiecePositions[1].file) % 2
 		return color1 != color2
 	}
 	return true

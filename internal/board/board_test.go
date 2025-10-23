@@ -8,258 +8,258 @@ import (
 )
 
 func TestInsufficientMaterialDraw(t *testing.T) {
-	board := Board{}
+	b := board{}
 
-	for i := range board.spots {
-		for j := range board.spots[i] {
-			board.spots[i][j] = &Position{
-				Rank:  i,
-				File:  j,
-				Piece: nil,
+	for i := range b.spots {
+		for j := range b.spots[i] {
+			b.spots[i][j] = &position{
+				rank:  i,
+				file:  j,
+				piece: nil,
 			}
 		}
 	}
 
 	// Case 1: king vs king
-	board.spots[0][1].Piece = &King{
+	b.spots[0][1].piece = &king{
 		color: "white",
 	}
-	board.spots[6][2].Piece = &King{
+	b.spots[6][2].piece = &king{
 		color: "black",
 	}
 	t.Run("Only kings case", func(t *testing.T) {
-		if haveSufficientMaterial(&board) {
+		if haveSufficientMaterial(&b) {
 			t.Error("Expecded draw by insufficient material (only kings)")
 		}
 	})
 
 	// Case 2: king vs king + bishop
-	board.spots[2][3].Piece = &Bishop{
+	b.spots[2][3].piece = &bishop{
 		color: "white",
 	}
 
 	t.Run("Kings + single bishop case", func(t *testing.T) {
-		if haveSufficientMaterial(&board) {
+		if haveSufficientMaterial(&b) {
 			t.Error("Expected draw by insufficient material (kings + single bishop)")
 		}
 	})
 
 	// Case 3: king vs king + knight
-	board.spots[2][3].Piece = &Knight{
+	b.spots[2][3].piece = &knight{
 		color: "white",
 	}
 
 	t.Run("Kings + single knight case", func(t *testing.T) {
-		if haveSufficientMaterial(&board) {
+		if haveSufficientMaterial(&b) {
 			t.Error("Expected draw by insufficient material (kings + single knight)")
 		}
 	})
 
 	// Case 4: king vs king + 2 bishops on same color squares
-	board.spots[2][3].Piece = &Bishop{
+	b.spots[2][3].piece = &bishop{
 		color: "white",
 	}
 
-	board.spots[4][5].Piece = &Bishop{
+	b.spots[4][5].piece = &bishop{
 		color: "white",
 	}
 
 	t.Run("Kings + 2 bishops on same color", func(t *testing.T) {
-		if haveSufficientMaterial(&board) {
+		if haveSufficientMaterial(&b) {
 			t.Error("Expected draw by insufficient material (kings + 2 bishops on same color squares)")
 		}
 	})
 
 	// Case 5: king vs king + 2 bishops on different color squares
-	board.spots[4][5].Piece = nil
-	board.spots[5][5].Piece = &Bishop{
+	b.spots[4][5].piece = nil
+	b.spots[5][5].piece = &bishop{
 		color: "white",
 	}
 
 	t.Run("Kings + 2 bishops on different color", func(t *testing.T) {
-		if !haveSufficientMaterial(&board) {
+		if !haveSufficientMaterial(&b) {
 			t.Error("Expected game to have sufficient material for checkmate (bishops on different colored squares)")
 		}
 	})
 
 	// Case 6: king vs king + rook
-	board.spots[5][5].Piece = nil
-	board.spots[2][3].Piece = &Rook{
+	b.spots[5][5].piece = nil
+	b.spots[2][3].piece = &rook{
 		color: "white",
 	}
 
 	t.Run("Kings + rook", func(t *testing.T) {
-		if !haveSufficientMaterial(&board) {
+		if !haveSufficientMaterial(&b) {
 			t.Error("Expected game to have sufficient material for checkmate (rook)")
 		}
 	})
 
 	// Case 7: king vs king + pawn
-	board.spots[2][3].Piece = &Pawn{
+	b.spots[2][3].piece = &pawn{
 		color:     "white",
 		direction: 1,
 	}
 
 	t.Run("Kings + pawn", func(t *testing.T) {
-		if !haveSufficientMaterial(&board) {
+		if !haveSufficientMaterial(&b) {
 			t.Error("Expected game to have sufficient material for checkmate (pawn)")
 		}
 	})
 
 	// Case 8: king vs king + queen
-	board.spots[2][3].Piece = &Queen{
+	b.spots[2][3].piece = &queen{
 		color: "white",
 	}
 
 	t.Run("Kings + queen", func(t *testing.T) {
-		if !haveSufficientMaterial(&board) {
+		if !haveSufficientMaterial(&b) {
 			t.Error("Expected game to have sufficient material for checkmate (queen)")
 		}
 	})
 
 	// Case 9: king vs king + 2 knights
-	board.spots[5][5].Piece = &Knight{
+	b.spots[5][5].piece = &knight{
 		color: "white",
 	}
-	board.spots[2][3].Piece = &Knight{
+	b.spots[2][3].piece = &knight{
 		color: "white",
 	}
 
 	t.Run("Kings + 2 knights", func(t *testing.T) {
-		if !haveSufficientMaterial(&board) {
+		if !haveSufficientMaterial(&b) {
 			t.Error("Expected game to have sufficient material for checkmate (2 knights)")
 		}
 	})
 }
 
 func TestCheckmate(t *testing.T) {
-	board := Board{}
+	b := board{}
 
-	for i := range board.spots {
-		for j := range board.spots[i] {
-			board.spots[i][j] = &Position{
-				Rank:  i,
-				File:  j,
-				Piece: nil,
+	for i := range b.spots {
+		for j := range b.spots[i] {
+			b.spots[i][j] = &position{
+				rank:  i,
+				file:  j,
+				piece: nil,
 			}
 		}
 	}
 
 	// Case 1: simple checkmate
-	board.spots[7][4].Piece = &King{
+	b.spots[7][4].piece = &king{
 		color: "black",
 	}
-	board.blackKingPosition = board.spots[7][4]
-	board.spots[6][4].Piece = &Queen{
+	b.blackKingPosition = b.spots[7][4]
+	b.spots[6][4].piece = &queen{
 		color: "white",
 	}
-	board.spots[5][4].Piece = &King{
+	b.spots[5][4].piece = &king{
 		color: "white",
 	}
-	board.whiteKingPosition = board.spots[5][4]
+	b.whiteKingPosition = b.spots[5][4]
 
 	t.Run("Test checkmate", func(t *testing.T) {
-		if hasLegalMove(&board, "black") {
+		if hasLegalMove(&b, "black") {
 			t.Error("Expected game to end with checkmate")
 		}
 	})
 
 	// Case 2: simple check
-	board.spots[5][4].Piece = nil
-	board.spots[4][4].Piece = &King{
+	b.spots[5][4].piece = nil
+	b.spots[4][4].piece = &king{
 		color: "white",
 	}
-	board.whiteKingPosition = board.spots[4][4]
+	b.whiteKingPosition = b.spots[4][4]
 
 	t.Run("Test checkmate", func(t *testing.T) {
-		if !hasLegalMove(&board, "black") {
+		if !hasLegalMove(&b, "black") {
 			t.Error("Expected game not to end with checkmate")
 		}
 	})
 
 	// Case 3: checkmate with pin
-	board.spots[6][3].Piece = &Queen{
+	b.spots[6][3].piece = &queen{
 		color: "black",
 	}
-	board.spots[7][3].Piece = &Rook{
+	b.spots[7][3].piece = &rook{
 		color: "black",
 	}
-	board.spots[7][5].Piece = &Rook{
+	b.spots[7][5].piece = &rook{
 		color: "black",
 	}
-	board.spots[6][5].Piece = &Pawn{
+	b.spots[6][5].piece = &pawn{
 		color:     "black",
 		direction: -1,
 	}
 
-	board.spots[6][4].Piece = nil
-	board.spots[4][1].Piece = &Bishop{
+	b.spots[6][4].piece = nil
+	b.spots[4][1].piece = &bishop{
 		color: "white",
 	}
-	board.spots[4][4].Piece = &Queen{
+	b.spots[4][4].piece = &queen{
 		color: "white",
 	}
-	board.spots[3][4].Piece = &King{
+	b.spots[3][4].piece = &king{
 		color: "white",
 	}
-	board.whiteKingPosition = board.spots[3][4]
+	b.whiteKingPosition = b.spots[3][4]
 
 	t.Run("Test checkmate with pin", func(t *testing.T) {
-		if hasLegalMove(&board, "black") {
+		if hasLegalMove(&b, "black") {
 			t.Error("Expected game to end with checkmate")
 		}
 	})
 }
 
 func TestIsUnderAttack(t *testing.T) {
-	board := Board{}
+	b := board{}
 
-	for i := range board.spots {
-		for j := range board.spots[i] {
-			board.spots[i][j] = &Position{
-				Rank:  i,
-				File:  j,
-				Piece: nil,
+	for i := range b.spots {
+		for j := range b.spots[i] {
+			b.spots[i][j] = &position{
+				rank:  i,
+				file:  j,
+				piece: nil,
 			}
 		}
 	}
 
 	// Case 1: simple check
-	board.spots[7][4].Piece = &King{
+	b.spots[7][4].piece = &king{
 		color: "black",
 	}
-	board.blackKingPosition = board.spots[7][4]
+	b.blackKingPosition = b.spots[7][4]
 
-	board.spots[5][4].Piece = &Queen{
+	b.spots[5][4].piece = &queen{
 		color: "white",
 	}
 
 	t.Run("Check by queen", func(t *testing.T) {
-		if !isUnderAttack(board.blackKingPosition, "black", &board) {
+		if !isUnderAttack(b.blackKingPosition, "black", &b) {
 			t.Error("Expected black king to be under check by queen")
 		}
 	})
 
 	// Case 2: not a check (blocked by piece)
-	board.spots[6][4].Piece = &Pawn{
+	b.spots[6][4].piece = &pawn{
 		color:     "black",
 		direction: -1,
 	}
 
 	t.Run("Not a check", func(t *testing.T) {
-		if isUnderAttack(board.blackKingPosition, "black", &board) {
+		if isUnderAttack(b.blackKingPosition, "black", &b) {
 			t.Error("Expected black king not to be under check")
 		}
 	})
 
 	// Case 3: attacked by pawn
-	board.spots[6][5].Piece = &Pawn{
+	b.spots[6][5].piece = &pawn{
 		color:     "white",
 		direction: 1,
 	}
 
 	t.Run("Check by pawn", func(t *testing.T) {
-		if !isUnderAttack(board.blackKingPosition, "black", &board) {
+		if !isUnderAttack(b.blackKingPosition, "black", &b) {
 			t.Error("Expected black king to be under attack by pawn")
 		}
 	})
@@ -268,33 +268,33 @@ func TestIsUnderAttack(t *testing.T) {
 func TestStalemate(t *testing.T) {
 	model := boardModel{}
 
-	board := Board{}
+	b := board{}
 
-	for i := range board.spots {
-		for j := range board.spots[i] {
-			board.spots[i][j] = &Position{
-				Rank:  i,
-				File:  j,
-				Piece: nil,
+	for i := range b.spots {
+		for j := range b.spots[i] {
+			b.spots[i][j] = &position{
+				rank:  i,
+				file:  j,
+				piece: nil,
 			}
 		}
 	}
 
-	board.spots[7][0].Piece = &King{
+	b.spots[7][0].piece = &king{
 		color: "black",
 	}
-	board.blackKingPosition = board.spots[7][0]
+	b.blackKingPosition = b.spots[7][0]
 
-	board.spots[6][2].Piece = &King{
+	b.spots[6][2].piece = &king{
 		color: "white",
 	}
-	board.whiteKingPosition = board.spots[6][2]
+	b.whiteKingPosition = b.spots[6][2]
 
-	board.spots[5][1].Piece = &Queen{
+	b.spots[5][1].piece = &queen{
 		color: "white",
 	}
 
-	model.board = &board
+	model.board = &b
 	model.whiteTurn = false
 
 	t.Run("Stalemate check", func(t *testing.T) {
@@ -304,37 +304,37 @@ func TestStalemate(t *testing.T) {
 	})
 
 	// Reset board for case 2
-	board2 := Board{}
-	for i := range board2.spots {
-		for j := range board2.spots[i] {
-			board2.spots[i][j] = &Position{
-				Rank:  i,
-				File:  j,
-				Piece: nil,
+	b2 := board{}
+	for i := range b2.spots {
+		for j := range b2.spots[i] {
+			b2.spots[i][j] = &position{
+				rank:  i,
+				file:  j,
+				piece: nil,
 			}
 		}
 	}
 
-	board2.spots[7][0].Piece = &King{
+	b2.spots[7][0].piece = &king{
 		color: "black",
 	}
-	board2.blackKingPosition = board2.spots[7][0]
-	board2.spots[6][1].Piece = &Rook{
+	b2.blackKingPosition = b2.spots[7][0]
+	b2.spots[6][1].piece = &rook{
 		color: "black",
 	}
 
-	board2.spots[5][0].Piece = &King{
+	b2.spots[5][0].piece = &king{
 		color: "white",
 	}
-	board2.whiteKingPosition = board2.spots[5][0]
-	board2.spots[5][2].Piece = &Bishop{
+	b2.whiteKingPosition = b2.spots[5][0]
+	b2.spots[5][2].piece = &bishop{
 		color: "white",
 	}
-	board2.spots[5][3].Piece = &Bishop{
+	b2.spots[5][3].piece = &bishop{
 		color: "white",
 	}
 
-	model.board = &board2
+	model.board = &b2
 	model.check = ""
 
 	t.Run("Stalemate check with pin", func(t *testing.T) {
@@ -358,22 +358,22 @@ func Test50MoveRule(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.testName, func(t *testing.T) {
-			board := Board{}
-			board.staleTurns = test.staleTurns
-			draw, warning := check50MoveFule(board.staleTurns)
+			b := board{}
+			b.staleTurns = test.staleTurns
+			draw, warning := check50MoveFule(b.staleTurns)
 			if (draw != test.wantDraw) || (warning != test.wantWarning) {
 				t.Errorf("Expected draw to be %v got %v. Expected warning to be %v got %v", test.wantDraw, draw, test.wantWarning, warning)
 			}
 		})
 	}
 
-	board := Board{}
-	for i := range board.spots {
-		for j := range board.spots[i] {
-			board.spots[i][j] = &Position{
-				Rank:  i,
-				File:  j,
-				Piece: nil,
+	b := board{}
+	for i := range b.spots {
+		for j := range b.spots[i] {
+			b.spots[i][j] = &position{
+				rank:  i,
+				file:  j,
+				piece: nil,
 			}
 		}
 	}
@@ -387,143 +387,143 @@ func Test50MoveRule(t *testing.T) {
 		staleTurns    int
 		pieceCreation func(color string) piece
 	}{
-		{"Test increase/reset counter logic for bishop", "a1", "b2", "d4", "c3", 30, func(color string) piece { return &Bishop{color: color} }},
-		{"Test increase/reset counter logic for knight", "a1", "b1", "d1", "c3", 20, func(color string) piece { return &Knight{color: color} }},
-		{"Test increase/reset counter logic for queen", "a1", "b2", "d4", "c3", 40, func(color string) piece { return &Queen{color: color} }},
-		{"Test increase/reset counter logic for rook", "a1", "b1", "b5", "b2", 10, func(color string) piece { return &Rook{color: color} }},
+		{"Test increase/reset counter logic for bishop", "a1", "b2", "d4", "c3", 30, func(color string) piece { return &bishop{color: color} }},
+		{"Test increase/reset counter logic for knight", "a1", "b1", "d1", "c3", 20, func(color string) piece { return &knight{color: color} }},
+		{"Test increase/reset counter logic for queen", "a1", "b2", "d4", "c3", 40, func(color string) piece { return &queen{color: color} }},
+		{"Test increase/reset counter logic for rook", "a1", "b1", "b5", "b2", 10, func(color string) piece { return &rook{color: color} }},
 	}
 
 	for _, test := range tests2 {
 		t.Run(test.testName, func(t *testing.T) {
 			model := boardModel{}
-			board := Board{}
-			for i := range board.spots {
-				for j := range board.spots[i] {
-					board.spots[i][j] = &Position{
-						Rank:  i,
-						File:  j,
-						Piece: nil,
+			b := board{}
+			for i := range b.spots {
+				for j := range b.spots[i] {
+					b.spots[i][j] = &position{
+						rank:  i,
+						file:  j,
+						piece: nil,
 					}
 				}
 			}
-			model.board = &board
-			kingPos, _ := PositionFromString(test.kingPos, &model)
-			board.spots[kingPos.Rank][kingPos.File].Piece = &King{
+			model.board = &b
+			kingPos, _ := positionFromString(test.kingPos, &model)
+			b.spots[kingPos.rank][kingPos.file].piece = &king{
 				color: "white",
 			}
-			board.whiteKingPosition = kingPos
+			b.whiteKingPosition = kingPos
 
-			whitePos, _ := PositionFromString(test.whitePiecePos, &model)
-			whiteSquare := board.spots[whitePos.Rank][whitePos.File]
-			whiteSquare.Piece = test.pieceCreation("white")
+			whitePos, _ := positionFromString(test.whitePiecePos, &model)
+			whiteSquare := b.spots[whitePos.rank][whitePos.file]
+			whiteSquare.piece = test.pieceCreation("white")
 
-			blackPos, _ := PositionFromString(test.blackPiecePos, &model)
-			blackSquare := board.spots[blackPos.Rank][blackPos.File]
-			blackSquare.Piece = test.pieceCreation("black")
+			blackPos, _ := positionFromString(test.blackPiecePos, &model)
+			blackSquare := b.spots[blackPos.rank][blackPos.file]
+			blackSquare.piece = test.pieceCreation("black")
 
-			board.staleTurns = test.staleTurns
+			b.staleTurns = test.staleTurns
 
-			movePos, _ := PositionFromString(test.movePos, &model)
-			moveSquare := board.spots[movePos.Rank][movePos.File]
+			movePos, _ := positionFromString(test.movePos, &model)
+			moveSquare := b.spots[movePos.rank][movePos.file]
 
-			err := whiteSquare.Piece.Move(whiteSquare, moveSquare, &board)
+			err := whiteSquare.piece.move(whiteSquare, moveSquare, &b)
 			if err != nil {
 				t.Error("Expected legal move", err)
 			}
-			if board.staleTurns != (test.staleTurns + 1) {
-				t.Errorf("Expected stale turns counter to increase to %d, got %d instead", test.staleTurns+1, board.staleTurns)
+			if b.staleTurns != (test.staleTurns + 1) {
+				t.Errorf("Expected stale turns counter to increase to %d, got %d instead", test.staleTurns+1, b.staleTurns)
 			}
 
-			err = moveSquare.Piece.Move(moveSquare, blackSquare, &board)
+			err = moveSquare.piece.move(moveSquare, blackSquare, &b)
 			if err != nil {
 				t.Error("Expected legal move", err)
 			}
-			if board.staleTurns != 0 {
-				t.Errorf("Expected stale turns counter to reset, got %d instead", board.staleTurns)
+			if b.staleTurns != 0 {
+				t.Errorf("Expected stale turns counter to reset, got %d instead", b.staleTurns)
 			}
 		})
 	}
 
 	// Test increase/reset counter logic for king
-	for i := range board.spots {
-		for j := range board.spots[i] {
-			board.spots[i][j] = &Position{
-				Rank:  i,
-				File:  j,
-				Piece: nil,
+	for i := range b.spots {
+		for j := range b.spots[i] {
+			b.spots[i][j] = &position{
+				rank:  i,
+				file:  j,
+				piece: nil,
 			}
 		}
 	}
 
-	board.spots[0][0].Piece = &King{
+	b.spots[0][0].piece = &king{
 		color: "white",
 	}
-	board.whiteKingPosition = board.spots[0][0]
-	board.spots[1][2].Piece = &Pawn{
+	b.whiteKingPosition = b.spots[0][0]
+	b.spots[1][2].piece = &pawn{
 		color:     "black",
 		direction: -1,
 	}
 
-	board.staleTurns = 20
-	err := board.spots[0][0].Piece.Move(board.spots[0][0], board.spots[1][1], &board)
+	b.staleTurns = 20
+	err := b.spots[0][0].piece.move(b.spots[0][0], b.spots[1][1], &b)
 	if err != nil {
 		t.Error("Expected legal move1 for king")
 	}
-	if board.staleTurns != 21 {
-		t.Errorf("Expected stale turns counter to increase to 21, got %d instead", board.staleTurns)
+	if b.staleTurns != 21 {
+		t.Errorf("Expected stale turns counter to increase to 21, got %d instead", b.staleTurns)
 	}
-	err = board.spots[1][1].Piece.Move(board.spots[1][1], board.spots[1][2], &board)
+	err = b.spots[1][1].piece.move(b.spots[1][1], b.spots[1][2], &b)
 	if err != nil {
 		t.Error("Expected legal move2 for king")
 	}
-	if board.staleTurns != 0 {
-		t.Errorf("Expected stale turns counter to reset, got %d instead", board.staleTurns)
+	if b.staleTurns != 0 {
+		t.Errorf("Expected stale turns counter to reset, got %d instead", b.staleTurns)
 	}
 
 	// Test reset counter for pawn move
-	for i := range board.spots {
-		for j := range board.spots[i] {
-			board.spots[i][j] = &Position{
-				Rank:  i,
-				File:  j,
-				Piece: nil,
+	for i := range b.spots {
+		for j := range b.spots[i] {
+			b.spots[i][j] = &position{
+				rank:  i,
+				file:  j,
+				piece: nil,
 			}
 		}
 	}
 
-	board.spots[0][0].Piece = &King{
+	b.spots[0][0].piece = &king{
 		color: "white",
 	}
-	board.whiteKingPosition = board.spots[0][0]
-	board.spots[2][1].Piece = &Pawn{
+	b.whiteKingPosition = b.spots[0][0]
+	b.spots[2][1].piece = &pawn{
 		color:     "white",
 		direction: 1,
 	}
 
-	board.staleTurns = 40
-	err = board.spots[2][1].Piece.Move(board.spots[2][1], board.spots[3][1], &board)
+	b.staleTurns = 40
+	err = b.spots[2][1].piece.move(b.spots[2][1], b.spots[3][1], &b)
 	if err != nil {
 		t.Error("Expected legal move2 for pawn")
 	}
-	if board.staleTurns != 0 {
-		t.Errorf("Expected stale turns counter to reset, got %d instead", board.staleTurns)
+	if b.staleTurns != 0 {
+		t.Errorf("Expected stale turns counter to reset, got %d instead", b.staleTurns)
 	}
 }
 
 func TestDrawOffer(t *testing.T) {
 	ctx := app.Context{}
 	model := &boardModel{}
-	board := &Board{}
-	for i := range board.spots {
-		for j := range board.spots[i] {
-			board.spots[i][j] = &Position{
-				Rank:  i,
-				File:  j,
-				Piece: nil,
+	b := &board{}
+	for i := range b.spots {
+		for j := range b.spots[i] {
+			b.spots[i][j] = &position{
+				rank:  i,
+				file:  j,
+				piece: nil,
 			}
 		}
 	}
-	model.board = board
+	model.board = b
 	model.input = textinput.New()
 	model.input.Placeholder = ""
 	model.input.Prompt = ""
@@ -537,7 +537,7 @@ func TestDrawOffer(t *testing.T) {
 
 	_, cmd := model.Update(msg)
 	if cmd == nil {
-		t.Error("Expected command signaling end of the game, got nothing instead")
+		t.Fatal("Expected command signaling end of the game, got nothing instead")
 	}
 	msgOut := cmd()
 	over, ok := msgOut.(overMsg)
@@ -556,5 +556,252 @@ func TestDrawOffer(t *testing.T) {
 	model.Update(msg)
 	if model.offeredDraw {
 		t.Error("Expected draw to be refused and flag to be cleared")
+	}
+}
+
+func TestOverMsgCheckmate(t *testing.T) {
+	// Case 1: proper checkmate
+	ctx := app.Context{}
+	model := &boardModel{}
+	b := &board{}
+	for i := range b.spots {
+		for j := range b.spots[i] {
+			b.spots[i][j] = &position{
+				rank:  i,
+				file:  j,
+				piece: nil,
+			}
+		}
+	}
+
+	b.spots[7][4].piece = &king{
+		color: "black",
+	}
+	b.blackKingPosition = b.spots[7][4]
+	b.spots[6][1].piece = &queen{
+		color: "white",
+	}
+	b.spots[5][4].piece = &king{
+		color: "white",
+	}
+	b.whiteKingPosition = b.spots[5][4]
+
+	model.whiteTurn = true
+	model.board = b
+	model.input = textinput.New()
+	model.input.Placeholder = ""
+	model.input.Prompt = ""
+	model.ctx = &ctx
+
+	msg := gameMsg{input: "b7 e7"}
+	_, cmd := model.Update(msg)
+	if cmd == nil {
+		t.Fatal("Expected game over message (checkmate)")
+	}
+	msgOut := cmd()
+	over, ok := msgOut.(overMsg)
+	if !ok {
+		t.Errorf("Expected overMsg, got %T", msgOut)
+	}
+	if over.draw {
+		t.Error("Expected game to end in a win/loss, not in draw")
+	}
+	if over.message != "Black king is in checkmate! Game over." {
+		t.Errorf("Expected black king to be in checkmate, got: %q", over.message)
+	}
+
+	// Case 2: only check
+	model = &boardModel{}
+	b = &board{}
+	for i := range b.spots {
+		for j := range b.spots[i] {
+			b.spots[i][j] = &position{
+				rank:  i,
+				file:  j,
+				piece: nil,
+			}
+		}
+	}
+
+	b.spots[7][4].piece = &king{
+		color: "black",
+	}
+	b.blackKingPosition = b.spots[7][4]
+	b.spots[6][1].piece = &queen{
+		color: "white",
+	}
+	b.spots[4][4].piece = &king{
+		color: "white",
+	}
+	b.whiteKingPosition = b.spots[4][4]
+
+	model.whiteTurn = true
+	model.board = b
+	model.input = textinput.New()
+	model.input.Placeholder = ""
+	model.input.Prompt = ""
+	model.ctx = &ctx
+
+	msg = gameMsg{input: "b7 e7"}
+	_, cmd = model.Update(msg)
+
+	if cmd != nil {
+		t.Error("Expected game to continue")
+	}
+}
+
+func TestOverMsgStalemate(t *testing.T) {
+	ctx := app.Context{}
+	model := &boardModel{}
+	b := &board{}
+	for i := range b.spots {
+		for j := range b.spots[i] {
+			b.spots[i][j] = &position{
+				rank:  i,
+				file:  j,
+				piece: nil,
+			}
+		}
+	}
+
+	b.spots[7][0].piece = &king{
+		color: "black",
+	}
+	b.blackKingPosition = b.spots[7][0]
+
+	b.spots[6][2].piece = &king{
+		color: "white",
+	}
+	b.whiteKingPosition = b.spots[6][2]
+
+	b.spots[3][1].piece = &queen{
+		color: "white",
+	}
+
+	model.whiteTurn = true
+	model.board = b
+	model.input = textinput.New()
+	model.input.Placeholder = ""
+	model.input.Prompt = ""
+	model.ctx = &ctx
+
+	msg := gameMsg{input: "b4 b6"}
+	_, cmd := model.Update(msg)
+	if cmd == nil {
+		t.Fatal("Expected game over message (stalemate)")
+	}
+	msgOut := cmd()
+	over, ok := msgOut.(overMsg)
+	if !ok {
+		t.Errorf("Expected overMsg, got %T", msgOut)
+	}
+	if !over.draw {
+		t.Error("Expected game to end in a draw")
+	}
+	if over.message != "Draw due to stalemate! Game over." {
+		t.Errorf("Expected stalemate, got: %q", over.message)
+	}
+}
+
+func TestOverMsgInsufficientMaterial(t *testing.T) {
+	ctx := app.Context{}
+	model := &boardModel{}
+	b := &board{}
+	for i := range b.spots {
+		for j := range b.spots[i] {
+			b.spots[i][j] = &position{
+				rank:  i,
+				file:  j,
+				piece: nil,
+			}
+		}
+	}
+
+	b.spots[0][1].piece = &king{
+		color: "white",
+	}
+	b.whiteKingPosition = b.spots[0][1]
+	b.spots[6][2].piece = &king{
+		color: "black",
+	}
+	b.blackKingPosition = b.spots[6][2]
+	b.spots[0][2].piece = &rook{
+		color: "black",
+	}
+
+	model.whiteTurn = true
+	model.board = b
+	model.input = textinput.New()
+	model.input.Placeholder = ""
+	model.input.Prompt = ""
+	model.ctx = &ctx
+
+	msg := gameMsg{input: "b1 c1"}
+	_, cmd := model.Update(msg)
+	if cmd == nil {
+		t.Fatal("Expected game over message (insufficient material)")
+	}
+	msgOut := cmd()
+	over, ok := msgOut.(overMsg)
+	if !ok {
+		t.Errorf("Expected overMsg, got %T", msgOut)
+	}
+	if !over.draw {
+		t.Error("Expected game to end in a draw")
+	}
+	if over.message != "Draw due to insufficient material! Game over." {
+		t.Errorf("Expected insufficient material, got: %q", over.message)
+	}
+}
+
+func TestOverMsg50MoveRule(t *testing.T) {
+	ctx := app.Context{}
+	model := &boardModel{}
+	b := &board{}
+	for i := range b.spots {
+		for j := range b.spots[i] {
+			b.spots[i][j] = &position{
+				rank:  i,
+				file:  j,
+				piece: nil,
+			}
+		}
+	}
+
+	b.spots[0][1].piece = &king{
+		color: "white",
+	}
+	b.whiteKingPosition = b.spots[0][1]
+	b.spots[6][2].piece = &king{
+		color: "black",
+	}
+	b.blackKingPosition = b.spots[6][2]
+	b.spots[0][5].piece = &rook{
+		color: "black",
+	}
+
+	b.staleTurns = 99
+	model.whiteTurn = true
+	model.board = b
+	model.input = textinput.New()
+	model.input.Placeholder = ""
+	model.input.Prompt = ""
+	model.ctx = &ctx
+
+	msg := gameMsg{input: "b1 b2"}
+	_, cmd := model.Update(msg)
+	if cmd == nil {
+		t.Fatal("Expected game over message (50 move rule)")
+	}
+	msgOut := cmd()
+	over, ok := msgOut.(overMsg)
+	if !ok {
+		t.Errorf("Expected overMsg, got %T", msgOut)
+	}
+	if !over.draw {
+		t.Error("Expected game to end in a draw")
+	}
+	if over.message != "Draw due to fifty-move rule! Game over." {
+		t.Errorf("Expected fifty-move rule draw, got: %q", over.message)
 	}
 }

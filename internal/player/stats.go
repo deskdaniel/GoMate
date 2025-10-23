@@ -15,14 +15,14 @@ import (
 	"github.com/google/uuid"
 )
 
-type Stats struct {
+type stats struct {
 	Username string
 	Wins     int
 	Losses   int
 	Draws    int
 }
 
-func UpdateUserRecord(username string, ctx *app.Context, win, loss, draw bool) error {
+func updateUserRecord(username string, ctx *app.Context, win, loss, draw bool) error {
 	if ctx == nil || ctx.Queries == nil {
 		return fmt.Errorf("context or Queries is nil")
 	}
@@ -104,34 +104,34 @@ func UpdateUserRecord(username string, ctx *app.Context, win, loss, draw bool) e
 	return nil
 }
 
-func CheckStats(username string, ctx *app.Context) (Stats, error) {
+func checkStats(username string, ctx *app.Context) (stats, error) {
 	if ctx == nil || ctx.Queries == nil {
-		return Stats{}, fmt.Errorf("context or Queries is nil")
+		return stats{}, fmt.Errorf("context or Queries is nil")
 	}
 
-	var stats Stats
+	var statistics stats
 
 	user, err := ctx.Queries.GetUserByName(context.Background(), username)
 	if err != nil {
-		return Stats{}, fmt.Errorf("failed to get user: %w", err)
+		return stats{}, fmt.Errorf("failed to get user: %w", err)
 	}
 
-	stats.Username = user.Username
+	statistics.Username = user.Username
 
 	sqlStats, err := ctx.Queries.GetRecordsByUserID(context.Background(), user.ID)
 	if err == sql.ErrNoRows {
-		stats.Wins = 0
-		stats.Losses = 0
-		stats.Draws = 0
+		statistics.Wins = 0
+		statistics.Losses = 0
+		statistics.Draws = 0
 	} else if err != nil {
-		return Stats{}, fmt.Errorf("failed to get stats: %w", err)
+		return stats{}, fmt.Errorf("failed to get stats: %w", err)
 	} else {
-		stats.Wins = int(sqlStats.Wins.Int64)
-		stats.Losses = int(sqlStats.Losses.Int64)
-		stats.Draws = int(sqlStats.Draws.Int64)
+		statistics.Wins = int(sqlStats.Wins.Int64)
+		statistics.Losses = int(sqlStats.Losses.Int64)
+		statistics.Draws = int(sqlStats.Draws.Int64)
 	}
 
-	return stats, nil
+	return statistics, nil
 }
 
 type statsField int
@@ -149,7 +149,7 @@ type statsModel struct {
 	focusIndex int
 	input      textinput.Model
 	err        error
-	stats      *Stats
+	stats      *stats
 	found      bool
 }
 
@@ -263,11 +263,13 @@ func (m *statsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					}
 				}
 			case quitField:
-				return m, tea.Quit
+				return m, func() tea.Msg {
+					return messages.SwitchToMainMenu{}
+				}
 			}
 		}
 	case statsMsg:
-		stats, err := CheckStats(msg.Username, m.ctx)
+		stats, err := checkStats(msg.Username, m.ctx)
 		if err != nil {
 			m.err = err
 			m.stats = nil

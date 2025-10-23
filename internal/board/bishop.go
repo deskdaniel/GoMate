@@ -5,11 +5,11 @@ import (
 	"strings"
 )
 
-type Bishop struct {
+type bishop struct {
 	color string
 }
 
-func (b *Bishop) Color() (string, error) {
+func (b *bishop) colorString() (string, error) {
 	if strings.ToLower(b.color) != "white" && strings.ToLower(b.color) != "black" {
 		return "", fmt.Errorf("malformed bishop struct, incorrect color field")
 	}
@@ -17,8 +17,8 @@ func (b *Bishop) Color() (string, error) {
 	return strings.ToLower(b.color), nil
 }
 
-func (b *Bishop) Symbol() (rune, error) {
-	color, err := b.Color()
+func (b *bishop) symbol() (rune, error) {
+	color, err := b.colorString()
 	if err != nil {
 		return 0, err
 	}
@@ -33,9 +33,9 @@ func (b *Bishop) Symbol() (rune, error) {
 	}
 }
 
-func isPathClear(from, to *Position, board *Board) bool {
-	rankDiff := to.Rank - from.Rank
-	fileDiff := to.File - from.File
+func isPathClear(from, to *position, board *board) bool {
+	rankDiff := to.rank - from.rank
+	fileDiff := to.file - from.file
 
 	rankStep := 0
 	if rankDiff > 0 {
@@ -51,16 +51,16 @@ func isPathClear(from, to *Position, board *Board) bool {
 		fileStep = -1
 	}
 
-	for i, j := from.Rank+rankStep, from.File+fileStep; i != to.Rank+rankStep || j != to.File+fileStep; i, j = i+rankStep, j+fileStep {
-		if board.spots[i][j].Piece != nil {
-			if i != to.Rank || j != to.File {
+	for i, j := from.rank+rankStep, from.file+fileStep; i != to.rank+rankStep || j != to.file+fileStep; i, j = i+rankStep, j+fileStep {
+		if board.spots[i][j].piece != nil {
+			if i != to.rank || j != to.file {
 				return false
 			} else {
-				targetColor, err := to.Piece.Color()
+				targetColor, err := to.piece.colorString()
 				if err != nil {
 					return false
 				}
-				pieceColor, err := from.Piece.Color()
+				pieceColor, err := from.piece.colorString()
 				if err != nil {
 					return false
 				}
@@ -74,13 +74,13 @@ func isPathClear(from, to *Position, board *Board) bool {
 	return true
 }
 
-func (b *Bishop) ValidMove(from, to *Position, board *Board) bool {
+func (b *bishop) validMove(from, to *position, board *board) bool {
 	if from == to {
 		return false
 	}
 
-	rankDiff := to.Rank - from.Rank
-	fileDiff := to.File - from.File
+	rankDiff := to.rank - from.rank
+	fileDiff := to.file - from.file
 
 	if abs(rankDiff) != abs(fileDiff) {
 		return false
@@ -89,26 +89,26 @@ func (b *Bishop) ValidMove(from, to *Position, board *Board) bool {
 	return isPathClear(from, to, board)
 }
 
-func exposeKing(color string, board *Board, from, to, kingPos *Position, p, backup piece) error {
+func exposeKing(color string, board *board, from, to, kingPos *position, p, backup piece) error {
 	if isUnderAttack(kingPos, color, board) {
-		from.Piece = p
-		to.Piece = backup
+		from.piece = p
+		to.piece = backup
 		return fmt.Errorf("this move exposes your king")
 	}
 
 	return nil
 }
 
-func (b *Bishop) Move(from, to *Position, board *Board) error {
-	if !b.ValidMove(from, to, board) {
+func (b *bishop) move(from, to *position, board *board) error {
+	if !b.validMove(from, to, board) {
 		return fmt.Errorf("invalid move for bishop")
 	}
 
-	backupPiece := to.Piece
-	to.Piece = b
-	from.Piece = nil
+	backupPiece := to.piece
+	to.piece = b
+	from.piece = nil
 
-	var kingPos *Position
+	var kingPos *position
 	switch b.color {
 	case "white":
 		kingPos = board.whiteKingPosition

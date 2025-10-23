@@ -16,7 +16,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func RegisterPlayer(ctx *app.Context) error {
+func registerPlayer(ctx *app.Context) error {
 	if ctx == nil || ctx.Queries == nil {
 		return fmt.Errorf("context or Queries is nil")
 	}
@@ -39,7 +39,7 @@ func RegisterPlayer(ctx *app.Context) error {
 		return err
 	}
 
-	hashedPassword, err := HashPassword(ctx.Password)
+	hashedPassword, err := hashPassword(ctx.Password)
 	if err != nil {
 		return fmt.Errorf("failed to hash password: %w", err)
 	}
@@ -245,7 +245,7 @@ func (m *registerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.ctx.Username = msg.Username
 		m.ctx.Password = msg.Password
-		err := RegisterPlayer(m.ctx)
+		err := registerPlayer(m.ctx)
 		if err != nil {
 			m.err = err
 			return m, nil

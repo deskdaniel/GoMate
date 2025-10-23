@@ -5,12 +5,12 @@ import (
 	"strings"
 )
 
-type King struct {
+type king struct {
 	color    string
 	hasMoved bool
 }
 
-func (k *King) Color() (string, error) {
+func (k *king) colorString() (string, error) {
 	if strings.ToLower(k.color) != "white" && strings.ToLower(k.color) != "black" {
 		return "", fmt.Errorf("malformed king struct, incorrect color field")
 	}
@@ -18,8 +18,8 @@ func (k *King) Color() (string, error) {
 	return strings.ToLower(k.color), nil
 }
 
-func (k *King) Symbol() (rune, error) {
-	color, err := k.Color()
+func (k *king) symbol() (rune, error) {
+	color, err := k.colorString()
 	if err != nil {
 		return 0, err
 	}
@@ -34,24 +34,24 @@ func (k *King) Symbol() (rune, error) {
 	}
 }
 
-func isUnderAttack(pos *Position, color string, board *Board) bool {
+func isUnderAttack(pos *position, color string, board *board) bool {
 	for rank := 0; rank < 8; rank++ {
 		for file := 0; file < 8; file++ {
-			piece := board.spots[rank][file].Piece
+			piece := board.spots[rank][file].piece
 			if piece == nil {
 				continue
 			}
 
-			pieceColor, err := piece.Color()
+			pieceColor, err := piece.colorString()
 			if err != nil || pieceColor == color {
 				continue
 			}
 
 			from := board.spots[rank][file]
 			switch p := piece.(type) {
-			case *Pawn:
-				rankDiff := pos.Rank - rank
-				fileDiff := pos.File - file
+			case *pawn:
+				rankDiff := pos.rank - rank
+				fileDiff := pos.file - file
 				if p.color == "white" && rankDiff == 1 && abs(fileDiff) == 1 {
 					return true
 				}
@@ -59,7 +59,7 @@ func isUnderAttack(pos *Position, color string, board *Board) bool {
 					return true
 				}
 			default:
-				if piece.ValidMove(from, pos, board) {
+				if piece.validMove(from, pos, board) {
 					return true
 				}
 			}
@@ -69,22 +69,22 @@ func isUnderAttack(pos *Position, color string, board *Board) bool {
 	return false
 }
 
-func (k *King) ValidMove(from, to *Position, board *Board) bool {
+func (k *king) validMove(from, to *position, board *board) bool {
 	if from == to {
 		return false
 	}
 
-	rankDiff := to.Rank - from.Rank
-	fileDiff := to.File - from.File
+	rankDiff := to.rank - from.rank
+	fileDiff := to.file - from.file
 
 	switch k.color {
 	case "white":
-		if from.File == 4 && from.Rank == 0 && !k.hasMoved {
-			if to.File == 6 && to.Rank == 0 {
+		if from.file == 4 && from.rank == 0 && !k.hasMoved {
+			if to.file == 6 && to.rank == 0 {
 				rookPos := board.spots[0][7]
-				rook, ok := rookPos.Piece.(*Rook)
+				rook, ok := rookPos.piece.(*rook)
 				if ok && rook != nil && !rook.hasMoved {
-					if board.spots[0][5].Piece == nil && board.spots[0][6].Piece == nil {
+					if board.spots[0][5].piece == nil && board.spots[0][6].piece == nil {
 						if !isUnderAttack(from, k.color, board) &&
 							!isUnderAttack(board.spots[0][5], k.color, board) &&
 							!isUnderAttack(to, k.color, board) {
@@ -92,11 +92,11 @@ func (k *King) ValidMove(from, to *Position, board *Board) bool {
 						}
 					}
 				}
-			} else if to.File == 2 && to.Rank == 0 {
+			} else if to.file == 2 && to.rank == 0 {
 				rookPos := board.spots[0][0]
-				rook, ok := rookPos.Piece.(*Rook)
+				rook, ok := rookPos.piece.(*rook)
 				if ok && rook != nil && !rook.hasMoved {
-					if board.spots[0][1].Piece == nil && board.spots[0][2].Piece == nil && board.spots[0][3].Piece == nil {
+					if board.spots[0][1].piece == nil && board.spots[0][2].piece == nil && board.spots[0][3].piece == nil {
 						if !isUnderAttack(from, k.color, board) &&
 							!isUnderAttack(board.spots[0][3], k.color, board) &&
 							!isUnderAttack(to, k.color, board) {
@@ -107,12 +107,12 @@ func (k *King) ValidMove(from, to *Position, board *Board) bool {
 			}
 		}
 	case "black":
-		if from.File == 4 && from.Rank == 7 && !k.hasMoved {
-			if to.File == 6 && to.Rank == 7 {
+		if from.file == 4 && from.rank == 7 && !k.hasMoved {
+			if to.file == 6 && to.rank == 7 {
 				rookPos := board.spots[7][7]
-				rook, ok := rookPos.Piece.(*Rook)
+				rook, ok := rookPos.piece.(*rook)
 				if ok && rook != nil && !rook.hasMoved {
-					if board.spots[7][5].Piece == nil && board.spots[7][6].Piece == nil {
+					if board.spots[7][5].piece == nil && board.spots[7][6].piece == nil {
 						if !isUnderAttack(from, k.color, board) &&
 							!isUnderAttack(board.spots[7][5], k.color, board) &&
 							!isUnderAttack(to, k.color, board) {
@@ -120,11 +120,11 @@ func (k *King) ValidMove(from, to *Position, board *Board) bool {
 						}
 					}
 				}
-			} else if to.File == 2 && to.Rank == 7 {
+			} else if to.file == 2 && to.rank == 7 {
 				rookPos := board.spots[7][0]
-				rook, ok := rookPos.Piece.(*Rook)
+				rook, ok := rookPos.piece.(*rook)
 				if ok && rook != nil && !rook.hasMoved {
-					if board.spots[7][1].Piece == nil && board.spots[7][2].Piece == nil && board.spots[7][3].Piece == nil {
+					if board.spots[7][1].piece == nil && board.spots[7][2].piece == nil && board.spots[7][3].piece == nil {
 						if !isUnderAttack(from, k.color, board) &&
 							!isUnderAttack(board.spots[7][3], k.color, board) &&
 							!isUnderAttack(to, k.color, board) {
@@ -141,8 +141,8 @@ func (k *King) ValidMove(from, to *Position, board *Board) bool {
 	if abs(rankDiff) > 1 || abs(fileDiff) > 1 {
 		return false
 	}
-	if to.Piece != nil {
-		targetColor, err := to.Piece.Color()
+	if to.piece != nil {
+		targetColor, err := to.piece.colorString()
 		if err != nil || targetColor == k.color {
 			return false
 		}
@@ -151,50 +151,46 @@ func (k *King) ValidMove(from, to *Position, board *Board) bool {
 	return true
 }
 
-func (k *King) Move(from, to *Position, board *Board) error {
-	if !k.ValidMove(from, to, board) {
+func (k *king) move(from, to *position, board *board) error {
+	if !k.validMove(from, to, board) {
 		return fmt.Errorf("invalid move for king")
 	}
 
-	// if isUnderAttack(to, k.color, board) {
-	// 	return fmt.Errorf("king cannot move into check")
-	// }
-
-	if abs(to.File-from.File) == 2 {
-		switch to.File {
+	if abs(to.file-from.file) == 2 {
+		switch to.file {
 		case 6:
-			rookFrom := board.spots[from.Rank][7]
-			rookTo := board.spots[from.Rank][5]
-			rook, ok := rookFrom.Piece.(*Rook)
+			rookFrom := board.spots[from.rank][7]
+			rookTo := board.spots[from.rank][5]
+			rook, ok := rookFrom.piece.(*rook)
 			if !ok {
 				return fmt.Errorf("no rook to castle with")
 			}
-			rookFrom.Piece = nil
-			rookTo.Piece = rook
+			rookFrom.piece = nil
+			rookTo.piece = rook
 			rook.hasMoved = true
 		case 2:
-			rookFrom := board.spots[from.Rank][0]
-			rookTo := board.spots[from.Rank][3]
-			rook, ok := rookFrom.Piece.(*Rook)
+			rookFrom := board.spots[from.rank][0]
+			rookTo := board.spots[from.rank][3]
+			rook, ok := rookFrom.piece.(*rook)
 			if !ok {
 				return fmt.Errorf("no rook to castle with")
 			}
-			rookFrom.Piece = nil
-			rookTo.Piece = rook
+			rookFrom.piece = nil
+			rookTo.piece = rook
 			rook.hasMoved = true
 		default:
 			return fmt.Errorf("invalid castling move")
 		}
 	}
 
-	backupPiece := to.Piece
-	to.Piece = k
-	from.Piece = nil
+	backupPiece := to.piece
+	to.piece = k
+	from.piece = nil
 	k.hasMoved = true
 
 	if isUnderAttack(to, k.color, board) {
-		from.Piece = k
-		to.Piece = backupPiece
+		from.piece = k
+		to.piece = backupPiece
 		k.hasMoved = false
 		return fmt.Errorf("king cannot move into check")
 	}
