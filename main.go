@@ -27,7 +27,7 @@ func main() {
 
 	m := navigation.SetupNavigation(ctx)
 
-	p := tea.NewProgram(m)
+	p := tea.NewProgram(m, tea.WithAltScreen(), tea.WithMouseCellMotion())
 	if _, err := p.Run(); err != nil {
 		log.Fatal(err)
 	}

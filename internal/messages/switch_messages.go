@@ -12,4 +12,6 @@ type SwitchToRegisterUser struct{}
 
 type SwitchToStats struct{}
 
+type SwitchToHelp struct{}
+
 type SwitchToQuit struct{}

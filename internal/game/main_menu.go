@@ -17,6 +17,7 @@ const (
 	loginPlayer2
 	registerUser
 	viewStats
+	viewHelp
 	quit
 )
 
@@ -33,6 +34,7 @@ func SetupMainMenu(ctx *app.Context) tea.Model {
 		loginPlayer2,
 		registerUser,
 		viewStats,
+		viewHelp,
 		quit,
 	}
 
@@ -72,7 +74,11 @@ func (m mainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, func() tea.Msg {
 				return messages.SwitchToStats{}
 			}
-		case "6", "q", "esc", "ctrl+c":
+		case "6":
+			return m, func() tea.Msg {
+				return messages.SwitchToHelp{}
+			}
+		case "7", "q", "esc", "ctrl+c":
 			return m, func() tea.Msg {
 				return messages.SwitchToQuit{}
 			}
@@ -115,6 +121,10 @@ func (m mainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, func() tea.Msg {
 					return messages.SwitchToStats{}
 				}
+			case viewHelp:
+				return m, func() tea.Msg {
+					return messages.SwitchToHelp{}
+				}
 			case quit:
 				return m, func() tea.Msg {
 					return messages.SwitchToQuit{}
@@ -153,8 +163,10 @@ func (m mainMenuModel) View() string {
 			label = "4. Register user"
 		case viewStats:
 			label = "5. Stats"
+		case viewHelp:
+			label = "6. Help"
 		case quit:
-			label = "6. Quit"
+			label = "7. Quit"
 		}
 
 		if i == int(m.focusIndex) {
@@ -166,7 +178,7 @@ func (m mainMenuModel) View() string {
 
 	s += "\nUse up/down arrows to navigate, enter to select.\n"
 	s += "Alternatively, press the number key for the option.\n"
-	s += "Press 6, q, esc or ctrl+c to quit.\n"
+	s += "Press 7, q, esc or ctrl+c to quit.\n"
 
 	return s
 }
