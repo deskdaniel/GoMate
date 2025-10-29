@@ -1,5 +1,5 @@
 # Go-chess
-Go-chess is a simple terminal-based chess game written in Go.
+Go-chess is a terminal-based chess game written in Go.
 It features a TUI (text-based user interface) for local two-player matches.
 No AI opponent is included — both players play locally on the same machine.
 
