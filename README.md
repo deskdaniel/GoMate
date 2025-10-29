@@ -3,6 +3,11 @@ Go-chess is a terminal-based chess game written in Go.
 It features a TUI (text-based user interface) for local two-player matches.
 No AI opponent is included — both players play locally on the same machine.
 
+## Motivation
+This project started as a way to practice Go while building something familiar and self-contained.
+Chess provides a well-defined set of rules and logic, making it a good fit for exploring concepts like turn-based gameplay, move validation and tracking game state.
+It also serves as a lightweight way to play locally with a friend.
+
 ## Features
 - Register, log in, log out, and view player statistics
 - Core chess rules implemented, including:
@@ -23,7 +28,7 @@ Older versions (1.22+) should work, but behavior is not guaranteed.
 You can find setup instructions [here](https://github.com/mattn/go-sqlite3?tab=readme-ov-file#compiling)
 - Other dependencies will be automaticaly downloaded when building the executable/running app for first time
 
-## Installation
+## Quick Start
 1. Make sure [Go](https://go.dev/dl/) is installed.
 2. Clone the repository:
 ```
@@ -54,7 +59,7 @@ a2 a4
 ```
 This moves the piece from A2 to A4 (if the move is legal).
 
-## Ending a Game Early
+### Ending a Game Early
 You can end the game before checkmate by:
 - Offering a draw: type `draw`
 Your opponent must accept for it to take effect.
@@ -65,6 +70,10 @@ Your opponent must accept for it to take effect.
     - `surr`
 The forfeiting player records a loss, while the opponent records a win.
 - Closing the terminal window.
+
+## Contributing
+If you want to contribute you can fork the repository and open pull request.
+Please add tests to test your suggested changes, and make sure you pass already existing tests.
 
 ## Notes
 - Some terminal fonts may not display chess pieces or board symbols correctly. For best results, use DejaVu Sans Mono (tested and confirmed working).
