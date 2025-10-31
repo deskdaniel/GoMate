@@ -1,5 +1,5 @@
-# Go-chess
-Go-chess is a terminal-based chess game written in Go.
+# GoMate
+GoMate is a terminal-based chess game written in Go.
 It features a TUI (text-based user interface) for local two-player matches.
 No AI opponent is included — both players play locally on the same machine.
 
@@ -33,7 +33,7 @@ You can find setup instructions [here](https://github.com/mattn/go-sqlite3?tab=r
 2. Clone the repository:
 ```
 git clone <repo-url>
-cd Go-chess
+cd GoMate
 ```
 3. Build the executable
 ```
