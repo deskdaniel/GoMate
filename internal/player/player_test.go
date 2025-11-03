@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/dragoo23/Go-chess/internal/app"
-	"github.com/dragoo23/Go-chess/internal/database"
+	"github.com/deskdaniel/GoMate/internal/app"
+	"github.com/deskdaniel/GoMate/internal/database"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/pressly/goose/v3"
 )

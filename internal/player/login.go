@@ -7,8 +7,8 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/dragoo23/Go-chess/internal/app"
-	"github.com/dragoo23/Go-chess/internal/messages"
+	"github.com/deskdaniel/GoMate/internal/app"
+	"github.com/deskdaniel/GoMate/internal/messages"
 )
 
 func checkLogin(ctx *app.Context, slot int) error {

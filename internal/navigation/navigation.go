@@ -4,12 +4,12 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/dragoo23/Go-chess/internal/app"
-	"github.com/dragoo23/Go-chess/internal/board"
-	"github.com/dragoo23/Go-chess/internal/game"
-	"github.com/dragoo23/Go-chess/internal/help"
-	"github.com/dragoo23/Go-chess/internal/messages"
-	"github.com/dragoo23/Go-chess/internal/player"
+	"github.com/deskdaniel/GoMate/internal/app"
+	"github.com/deskdaniel/GoMate/internal/board"
+	"github.com/deskdaniel/GoMate/internal/game"
+	"github.com/deskdaniel/GoMate/internal/help"
+	"github.com/deskdaniel/GoMate/internal/messages"
+	"github.com/deskdaniel/GoMate/internal/player"
 )
 
 type navigationModel struct {

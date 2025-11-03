@@ -2,7 +2,7 @@ package help
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/dragoo23/Go-chess/internal/app"
+	"github.com/deskdaniel/GoMate/internal/app"
 )
 
 type helpField int

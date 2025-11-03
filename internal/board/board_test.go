@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/charmbracelet/bubbles/textinput"
-	"github.com/dragoo23/Go-chess/internal/app"
+	"github.com/deskdaniel/GoMate/internal/app"
 )
 
 func TestInsufficientMaterialDraw(t *testing.T) {

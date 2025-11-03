@@ -1,4 +1,4 @@
-module github.com/dragoo23/Go-chess
+module github.com/deskdaniel/GoMate
 
 go 1.25.1
 

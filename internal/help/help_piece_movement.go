@@ -3,7 +3,7 @@ package help
 import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/dragoo23/Go-chess/internal/messages"
+	"github.com/deskdaniel/GoMate/internal/messages"
 )
 
 func handlePieceMovement(m *helpModel, msg tea.Msg) (tea.Model, tea.Cmd) {

@@ -5,8 +5,8 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/dragoo23/Go-chess/internal/app"
-	"github.com/dragoo23/Go-chess/internal/messages"
+	"github.com/deskdaniel/GoMate/internal/app"
+	"github.com/deskdaniel/GoMate/internal/messages"
 )
 
 type mainMenuFields int

@@ -2,7 +2,7 @@ package help
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/dragoo23/Go-chess/internal/messages"
+	"github.com/deskdaniel/GoMate/internal/messages"
 )
 
 func handleGameEndingConditions(m *helpModel, msg tea.Msg) (tea.Model, tea.Cmd) {

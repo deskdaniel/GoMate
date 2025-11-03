@@ -1,7 +1,7 @@
 package app
 
 import (
-	"github.com/dragoo23/Go-chess/internal/database"
+	"github.com/deskdaniel/GoMate/internal/database"
 )
 
 type Context struct {

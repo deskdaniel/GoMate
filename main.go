@@ -6,10 +6,10 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/dragoo23/Go-chess/internal/app"
+	"github.com/deskdaniel/GoMate/internal/app"
 
-	"github.com/dragoo23/Go-chess/internal/database"
-	"github.com/dragoo23/Go-chess/internal/navigation"
+	"github.com/deskdaniel/GoMate/internal/database"
+	"github.com/deskdaniel/GoMate/internal/navigation"
 	_ "github.com/mattn/go-sqlite3"
 )
 
